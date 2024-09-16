@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Welcome to Your Trading Dashboard</h1>
+    
+    <ul>
+        <li><a href="{% url 'profile' %}">Profile</a></li>
+        <li><a href="{% url 'stock_list' %}">Stock List</a></li>
+        <li><a href="{% url 'watchlist' %}">Your Watchlist</a></li>
+        <li><a href="{% url 'create_transaction' %}">Make a Transaction</a></li>
+    </ul>
+    
+    <p>Manage your portfolio and explore stocks to trade.</p>
+{% endblock %}

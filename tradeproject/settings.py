@@ -133,6 +133,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -143,3 +149,6 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Or 'optional' if you don't want strict verification
 ACCOUNT_EMAIL_REQUIRED = True  # If email is required during signup
 
+ACCOUNT_FORMS = {
+    'signup': 'accounts.forms.CustomSignupForm',
+}

@@ -21,5 +21,11 @@ from accounts import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('', views.homepage),
+    path('', views.homepage,name='homepage'),
+    path('profile/', views.profile_view, name='profile'),
+    path('stocks/', views.stock_list_view, name='stock_list'),
+    path('stocks/<int:stock_id>/', views.stock_detail_view, name='stock_detail'),
+    path('transactions/new/', views.create_transaction_view, name='create_transaction'),
+    path('watchlist/', views.watchlist_view, name='watchlist'),
+    path('watchlist/add/<int:stock_id>/', views.add_to_watchlist_view, name='add_to_watchlist'),
 ]
