@@ -152,3 +152,6 @@ ACCOUNT_EMAIL_REQUIRED = True  # If email is required during signup
 ACCOUNT_FORMS = {
     'signup': 'accounts.forms.CustomSignupForm',
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
