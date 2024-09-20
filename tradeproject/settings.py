@@ -121,7 +121,7 @@ ACCOUNT_SIGNUP_REDIRECT_URL = '/'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
@@ -138,6 +138,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Directory to store static files collected from apps after running collectstatic
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -146,9 +148,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Or 'optional' if you don't want strict verification
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Or 'optional' if you don't want strict verification
 ACCOUNT_EMAIL_REQUIRED = True  # If email is required during signup
 
 ACCOUNT_FORMS = {
     'signup': 'accounts.forms.CustomSignupForm',
 }
+
+# Media files (user-uploaded content)
+MEDIA_URL = '/media/'
+
+# Directory to store media files
+MEDIA_ROOT = BASE_DIR / 'media'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

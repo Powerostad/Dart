@@ -4,9 +4,12 @@ from .models import Profile,Stock,Transaction,Watchlist  # Import your Profile m
 from .forms import ProfileForm,TransactionForm  # This form will handle profile updates
 
 
-@login_required
+
 def homepage(request):
-    return render(request, 'home.html')
+     if request.user.is_authenticated:
+        return redirect('homepage')  # Redirect authenticated users to their dashboard or another view
+     else:
+        return render(request, 'home.html')
 
 @login_required
 def profile_view(request):
