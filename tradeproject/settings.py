@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'django.contrib.sites',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -115,6 +116,9 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_SIGNUP_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = 'account_login'
+LOGOUT_URL = 'account_logout'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -162,3 +166,32 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,  
+    }
+}
+
+# Add your credentials here
+SOCIALACCOUNT_GOOGLE_CLIENT_ID = "451750325827-uq71blvklqupobcdjrtr810794tuk33f.apps.googleusercontent.com"
+SOCIALACCOUNT_GOOGLE_CLIENT_SECRET = "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"
+
+
+SESSION_COOKIE_SECURE = False  # For local testing, change to True in production
+CSRF_COOKIE_SECURE = False  # For local testing, change to True in production
+
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('django')
+logger.setLevel(logging.DEBUG)

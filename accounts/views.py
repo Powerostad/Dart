@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile,Stock,Transaction,Watchlist  # Import your Profile model
 from .forms import ProfileForm,TransactionForm  # This form will handle profile updates
-
+from allauth.socialaccount.models import SocialApp
 
 
 def homepage(request):
@@ -62,3 +62,10 @@ def watchlist_view(request):
     watchlist = Watchlist.objects.filter(user=request.user)
     return render(request, 'watchlist.html', {'watchlist': watchlist})
 
+
+def check_social_app():
+    try:
+        social_app = SocialApp.objects.get(provider='google')  # Example for Google OAuth
+        return social_app
+    except SocialApp.DoesNotExist:
+        raise Exception("Google SocialApp is not configured. Please configure it in the Django Admin.")

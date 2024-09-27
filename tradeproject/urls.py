@@ -20,11 +20,15 @@ from accounts import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from allauth.account import views as allauth_views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
+    path('accounts/login/', allauth_views.LoginView.as_view(), name='account_login'),
+    path('accounts/logout/', allauth_views.LogoutView.as_view(), name='account_logout'),
+    path('accounts/signup/', allauth_views.SignupView.as_view(), name='account_signup'),
     path('', views.homepage,name='homepage'),
     path('profile/', views.profile_view, name='profile'),
     path('stocks/', views.stock_list_view, name='stock_list'),
