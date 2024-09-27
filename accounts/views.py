@@ -7,13 +7,13 @@ from allauth.socialaccount.models import SocialApp
 
 def homepage(request):
      if request.user.is_authenticated:
-        return redirect('homepage')  # Redirect authenticated users to their dashboard or another view
+        return redirect('profile')  # Redirect authenticated users to their dashboard or another view
      else:
         return render(request, 'home.html')
 
 @login_required
 def profile_view(request):
-    profile = get_object_or_404(Profile, user=request.user)  # Fetch the profile based on the logged-in user
+    profile, created = Profile.objects.get_or_create(user=request.user)  # Fetch the profile based on the logged-in user
     
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
