@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="logout-container">
+    <h2>You've been logged out</h2>
+    <p>Thank you for visiting. You have successfully logged out.</p>
+    <p><a href="{% url 'account_login' %}">Log back in</a></p>
+    <p><a href="{% url 'homepage' %}">Return to homepage</a></p>
+</div>
+{% endblock %}

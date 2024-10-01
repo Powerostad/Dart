@@ -69,6 +69,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
+                
+                
             ],
         },
     },
@@ -170,6 +173,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
+        'APP': {
+            'client_id': '451750325827-uq71blvklqupobcdjrtr810794tuk33f.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        },
         'SCOPE': [
             'profile',
             'email',
@@ -180,6 +188,7 @@ SOCIALACCOUNT_PROVIDERS = {
         'OAUTH_PKCE_ENABLED': True,  
     }
 }
+
 
 # Add your credentials here
 SOCIALACCOUNT_GOOGLE_CLIENT_ID = "451750325827-uq71blvklqupobcdjrtr810794tuk33f.apps.googleusercontent.com"
