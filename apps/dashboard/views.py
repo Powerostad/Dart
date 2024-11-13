@@ -5,7 +5,7 @@ from django.template import loader
 from django.urls import reverse
 
 
-@login_required
+#@login_required
 def index(request):
     context = {'segment': 'index'}
 
