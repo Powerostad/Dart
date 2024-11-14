@@ -16,6 +16,8 @@ media
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/
+.idea/Dart.iml
 
 # AWS User-specific
 .idea/**/aws.xml

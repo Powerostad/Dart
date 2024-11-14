@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-blnes_z3fa2kx@1d7hv@1#bdk7=k4zpy!f7m@kb8l%aejksly=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["e8b7-37-221-45-68.ngrok-free.app", "127.0.0.1", "0.0.0.0"]
 
 
 # Application definition
@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
     # APPS
     'apps.accounts',
     'apps.dashboard',
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'django.contrib.sites',
     'allauth.socialaccount.providers.google',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -220,7 +223,20 @@ SESSION_COOKIE_SECURE = False  # For local testing, change to True in production
 CSRF_COOKIE_SECURE = False  # For local testing, change to True in production
 
 
-#import logging
-#logging.basicConfig(level=logging.DEBUG)
-#logger = logging.getLogger('django')
-#logger.setLevel(logging.DEBUG)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',  # Optional, for testing in browsers
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Dart API',
+    'DESCRIPTION': 'Dart Trading Platform',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
