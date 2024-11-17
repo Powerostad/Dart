@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +26,12 @@ ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-blnes_z3fa2kx@1d7hv@1#bdk7=k4zpy!f7m@kb8l%aejksly='
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
-ALLOWED_HOSTS = ["e8b7-37-221-45-68.ngrok-free.app", "127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = ["e8b7-37-221-45-68.ngrok-free.app", "127.0.0.1", "0.0.0.0", "localhost"]
 
 
 # Application definition
@@ -38,30 +43,28 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework.authtoken',
+    'django.contrib.sites',
     # APPS
     'apps.accounts',
     'apps.dashboard',
 
     # 3rd party apps
+    'rest_framework',
+    'rest_framework.authtoken',
     'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'django.contrib.sites',
-    'allauth.socialaccount.providers.google',
     'drf_spectacular',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'tradeproject.urls'
@@ -77,8 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'apps.context_processors.cfg_assets_root',
-                
+
                 
             ],
         },
@@ -91,21 +93,15 @@ WSGI_APPLICATION = 'tradeproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-#DATABASES = {
- #   'default': {
-  #      'ENGINE': 'django.db.backends.sqlite3',
-  #      'NAME': BASE_DIR / 'db.sqlite3',
-   # }
-#}
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dart',                   
-        'USER': 'admin',                   
-        'PASSWORD': 'admin1342',           
-        'HOST': '85.133.194.244',        
-        'PORT': '3306',            
+        'NAME': os.environ.get('MARIADB_DB'),
+        'USER': os.environ.get('MARIADB_USER'),
+        'PASSWORD': os.environ.get('MARIADB_PASSWORD'),
+        'HOST': os.environ.get('MARIADB_HOST'),
+        'PORT': os.environ.get('MARIADB_PORT'),
     }
 }
 
@@ -195,29 +191,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': '451750325827-uq71blvklqupobcdjrtr810794tuk33f.apps.googleusercontent.com',
-            'secret': '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',
-            'key': ''
-        },
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'OAUTH_PKCE_ENABLED': True,  
-    }
-}
-
-
-# Add your credentials here
-SOCIALACCOUNT_GOOGLE_CLIENT_ID = "451750325827-uq71blvklqupobcdjrtr810794tuk33f.apps.googleusercontent.com"
-SOCIALACCOUNT_GOOGLE_CLIENT_SECRET = "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"
-
+AUTH_URL = os.environ.get('AUTH_URL')
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.environ.get(
+    "GOOGLE_REDIRECT_URI", f"http://127.0.0.1:8000/accounts/google/login/callback/"
+)
+GOOGLE_ID_TOKEN_INFO_URL = os.environ.get(
+    "GOOGLE_ID_TOKEN_INFO_URL", "https://oauth2.googleapis.com/token"
+)
 
 SESSION_COOKIE_SECURE = False  # For local testing, change to True in production
 CSRF_COOKIE_SECURE = False  # For local testing, change to True in production
@@ -225,13 +207,16 @@ CSRF_COOKIE_SECURE = False  # For local testing, change to True in production
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',  # Optional, for testing in browsers
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -239,4 +224,38 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Dart Trading Platform',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'SECURITY': [
+        {'sessionAuth': []}
+    ],
+    'SECURITY_DEFINITIONS': {
+        'sessionAuth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'X-CSRFToken',
+            'description': 'Session authentication'
+        }
+    }
 }
+
+# Allow all origins
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React development server
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Important for sending cookies!
+
+# Cookie settings
+SESSION_COOKIE_SAMESITE = 'Lax'  # Or 'Strict' for production
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'  # Or 'Strict' for production
+CSRF_COOKIE_HTTPONLY = False  # Must be False to allow JS access
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']  # Add your frontend domain
+
+# Production settings should use secure cookies
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    CORS_ALLOWED_ORIGINS = [
+        "https://your-production-domain.com"
+    ]
+    CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']

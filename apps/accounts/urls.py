@@ -2,7 +2,9 @@ from django.urls import path,include
 from apps.accounts import views
 from . import views
 from rest_framework.routers import DefaultRouter
-from .views import UserDetailView, ProfileDetailView, UserRegisterView, UserLoginView, UserLogoutView, profile_view,UserViewSet
+from rest_framework_simplejwt import views as jwt_views
+
+from .views import GoogleCallbackView, GoogleAuthRedirectView
 
 # Using DRF's router if you want to use viewsets
 router = DefaultRouter()
@@ -16,11 +18,12 @@ urlpatterns = [
     # Profile and User detail views
     path('user/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
     path('profile/<int:pk>/', views.ProfileDetailView.as_view(), name='profile-detail'),
-    # profile views
-    path('profile/', views.profile_view, name='profile'),
-    #path('profiles/', ProfileListCreateView.as_view(), name='profile-list-create'),
-    #path('users/', views.UserViewSet.as_view(), name='user-list-create'),
-    # Include router URLs
+    path("token/", jwt_views.TokenObtainPairView.as_view(), name='token'),
+    path("token/refresh/", jwt_views.TokenRefreshView.as_view(), name='token-refresh'),
+
+    path('google/login/', GoogleAuthRedirectView.as_view(), name='google-login'),
+    path('google/callback/', GoogleCallbackView.as_view(), name='google-callback'),
+
     path('', include(router.urls)),
 ]
 
