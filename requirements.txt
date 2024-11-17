@@ -41,3 +41,5 @@ tzdata==2024.1
 uritemplate==4.1.1
 urllib3==2.2.2
 whitenoise==5.3.0
+djangorestframework==3.15.2
+drf-spectacular
