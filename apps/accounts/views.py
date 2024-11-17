@@ -124,11 +124,11 @@ class UserLogoutView(APIView):
 
             # Blacklist the token
             token = RefreshToken(logout_serializer.validated_data['refresh'])
-            # token.blacklist()
+            token.blacklist()
 
             return Response({"message": "Logout successful."}, status=status.HTTP_200_OK)
         except Exception as e:
-            raise e
+            # raise e
             return Response({"error": "Invalid token or logout failed."}, status=status.HTTP_400_BAD_REQUEST)
 
 
