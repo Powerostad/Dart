@@ -65,14 +65,44 @@ paths:
           description: ''
   /api/accounts/logout/:
     post:
-      operationId: api_accounts_logout_create
+      operationId: user_logout
       tags:
-      - api
+        - api
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+                  description: The refresh token to be blacklisted
+                  example: "your-refresh-token-here"
       responses:
         '200':
-          description: No response body
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful."
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Refresh token is required."
+          description: Refresh token is required
+
   /api/accounts/profile/{id}/:
     get:
       operationId: api_accounts_profile_retrieve

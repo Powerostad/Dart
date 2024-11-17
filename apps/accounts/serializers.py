@@ -27,6 +27,9 @@ class UserLoginSerializer(serializers.Serializer):
     username_or_email = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
 
+class UserLogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)

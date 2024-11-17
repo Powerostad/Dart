@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import ProfileSerializer,UserDetailSerializer, UserLoginSerializer
+from .serializers import ProfileSerializer, UserDetailSerializer, UserLoginSerializer, UserLogoutSerializer
 from .models import CustomUser, Profile
 from apps.accounts.models import Profile,Stock,Transaction,Watchlist  # Import your Profile model
 from apps.accounts.forms import ProfileForm,TransactionForm  # This form will handle profile updates
@@ -97,9 +97,15 @@ class UserLoginView(APIView):
                     return Response({"error": "Invalid username/email or password."},
                                     status=status.HTTP_400_BAD_REQUEST)
 
-            if user is not None and user.is_active:
-                login(request, user)
-                return Response({"message": "Login successful.", "user_id": user.id}, status=status.HTTP_200_OK)
+            if user and user.is_active:
+                # Generate JWT tokens
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    "message": "Login successful.",
+                    "user_id": user.id,
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh)
+                }, status=status.HTTP_200_OK)
             else:
                 return Response({"error": "Invalid username/email or password."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -107,10 +113,23 @@ class UserLoginView(APIView):
 
 class UserLogoutView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UserLogoutSerializer
 
     def post(self, request):
-        logout(request)
-        return Response(status=status.HTTP_200_OK)
+        try:
+            payload: dict = JSONParser().parse(stream=io.BytesIO(request.body))
+            logout_serializer = self.serializer_class(data=payload)
+            if not logout_serializer.is_valid():
+                return Response({"error": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Blacklist the token
+            token = RefreshToken(logout_serializer.validated_data['refresh'])
+            # token.blacklist()
+
+            return Response({"message": "Logout successful."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            raise e
+            return Response({"error": "Invalid token or logout failed."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleOAuthSettings:
