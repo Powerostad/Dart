@@ -12,8 +12,6 @@ paths:
       - accounts
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -25,8 +23,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -40,8 +36,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -62,10 +56,6 @@ paths:
             schema:
               $ref: '#/components/schemas/UserLogin'
         required: true
-      security:
-      - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -80,7 +70,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           description: No response body
@@ -97,7 +86,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -129,7 +117,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -160,7 +147,6 @@ paths:
               $ref: '#/components/schemas/PatchedProfile'
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -180,7 +166,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '204':
           description: No response body
@@ -191,8 +176,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -220,8 +203,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '201':
           content:
@@ -243,8 +224,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -277,8 +256,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -310,8 +287,6 @@ paths:
               $ref: '#/components/schemas/PatchedProfile'
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -332,8 +307,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '204':
           description: No response body
@@ -354,10 +327,6 @@ paths:
             schema:
               $ref: '#/components/schemas/UserRegister'
         required: true
-      security:
-      - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -385,8 +354,6 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenObtainPair'
         required: true
-      security:
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -414,8 +381,6 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenRefresh'
         required: true
-      security:
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -436,7 +401,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -468,7 +432,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -499,7 +462,6 @@ paths:
               $ref: '#/components/schemas/PatchedUserDetail'
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '200':
           content:
@@ -519,7 +481,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
       responses:
         '204':
           description: No response body
@@ -530,8 +491,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -559,8 +518,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '201':
           content:
@@ -582,8 +539,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -616,8 +571,6 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -649,8 +602,6 @@ paths:
               $ref: '#/components/schemas/PatchedUserDetail'
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -671,8 +622,6 @@ paths:
       - api
       security:
       - jwtAuth: []
-      - sessionAuth: []
-      - {}
       responses:
         '204':
           description: No response body

@@ -29,7 +29,8 @@ User = get_user_model()
    
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
-    serializer_class = UserDetailSerializer   
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
 
 class UserDetailView(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
@@ -49,7 +50,8 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
      
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer     
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
 
 class ProfileDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
