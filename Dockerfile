@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.8-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -26,4 +26,4 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy project
 COPY . /app/
 
-CMD ["python", "manage.py", "runserver" ,"0.0.0.0:8000"]
+CMD ["gunicorn", "tradeproject.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]

@@ -15,6 +15,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+import tradeproject
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     # 3rd party apps
     'rest_framework',
     'rest_framework.authtoken',
+    "channels",
     'allauth',
     'drf_spectacular',
     'corsheaders',
@@ -89,7 +92,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'tradeproject.wsgi.application'
+ASGI_APPLICATION = "tradeproject.asgi.application"
 
+# DJANGO_SETTINGS_MODULE=tradeproject.settings
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -104,6 +109,15 @@ DATABASES = {
         'HOST': os.environ.get('MARIADB_HOST'),
         'PORT': os.environ.get('MARIADB_PORT'),
     }
+}
+
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = int(os.environ.get('REDIS_PORT'))
+
+CHANNEL_LAYERS = {
+    'default': {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    },
 }
 
 
@@ -260,3 +274,5 @@ if not DEBUG:
         "https://your-production-domain.com"
     ]
     CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']
+
+METATRADER_URL = os.environ.get('METATRADER_URL')
