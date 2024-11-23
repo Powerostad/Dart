@@ -4,17 +4,6 @@ info:
   version: 1.0.0
   description: Dart Trading Platform
 paths:
-  /accounts/google/login/callback/:
-    get:
-      operationId: accounts_google_login_callback_retrieve
-      description: Handles the OAuth2 callback from Google and issues JWT tokens.
-      tags:
-      - accounts
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
   /api/accounts/google/callback/:
     get:
       operationId: api_accounts_google_callback_retrieve
@@ -103,15 +92,10 @@ paths:
                     example: "Refresh token is required."
           description: Refresh token is required
 
-  /api/accounts/profile/{id}/:
+  /api/accounts/profile/:
     get:
       operationId: api_accounts_profile_retrieve
       parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
       tags:
       - api
       security:
@@ -126,11 +110,6 @@ paths:
     put:
       operationId: api_accounts_profile_update
       parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
       tags:
       - api
       requestBody:
@@ -138,12 +117,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Profile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Profile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Profile'
         required: true
       security:
       - jwtAuth: []
@@ -154,192 +127,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Profile'
           description: ''
-    patch:
-      operationId: api_accounts_profile_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedProfile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedProfile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedProfile'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-    delete:
-      operationId: api_accounts_profile_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/accounts/profiles/:
-    get:
-      operationId: api_accounts_profiles_list
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Profile'
-          description: ''
-    post:
-      operationId: api_accounts_profiles_create
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Profile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Profile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Profile'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-  /api/accounts/profiles/{id}/:
-    get:
-      operationId: api_accounts_profiles_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this profile.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-    put:
-      operationId: api_accounts_profiles_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this profile.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Profile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Profile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Profile'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-    patch:
-      operationId: api_accounts_profiles_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this profile.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedProfile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedProfile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedProfile'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-    delete:
-      operationId: api_accounts_profiles_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this profile.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/accounts/register/:
     post:
       operationId: api_accounts_register_create
@@ -418,243 +205,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
-  /api/accounts/user/{id}/:
-    get:
-      operationId: api_accounts_user_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-    put:
-      operationId: api_accounts_user_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-    patch:
-      operationId: api_accounts_user_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUserDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUserDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUserDetail'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-    delete:
-      operationId: api_accounts_user_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/accounts/users/:
-    get:
-      operationId: api_accounts_users_list
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserDetail'
-          description: ''
-    post:
-      operationId: api_accounts_users_create
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-  /api/accounts/users/{id}/:
-    get:
-      operationId: api_accounts_users_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this custom user.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-    put:
-      operationId: api_accounts_users_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this custom user.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserDetail'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-    patch:
-      operationId: api_accounts_users_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this custom user.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUserDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUserDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUserDetail'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserDetail'
-          description: ''
-    delete:
-      operationId: api_accounts_users_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this custom user.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
 components:
   schemas:
     PatchedProfile:
@@ -738,11 +288,10 @@ components:
       type: object
       description: Serializer for CRUD operations on Profile model
       properties:
-        id:
-          type: integer
-          readOnly: true
-        user:
-          type: integer
+        username:
+          type: string
+        email:
+          type: string
         first_name:
           type: string
           maxLength: 255
@@ -753,10 +302,6 @@ components:
           type: string
           nullable: true
           maxLength: 20
-        address:
-          type: string
-          nullable: true
-          maxLength: 255
         date_of_birth:
           type: string
           format: date
@@ -768,25 +313,6 @@ components:
         bio:
           type: string
           nullable: true
-        total_return:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - created_at
-      - first_name
-      - id
-      - last_name
-      - updated_at
-      - user
     TokenObtainPair:
       type: object
       properties:

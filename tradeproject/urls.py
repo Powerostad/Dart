@@ -25,8 +25,6 @@ from apps.accounts.views import GoogleCallbackView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("accounts/google/login/callback/", GoogleCallbackView.as_view(), name="google-callback"),
-    # path('accounts/', include('allauth.urls')),
     path('', include('apps.dashboard.urls', namespace='main')),
     path("api/accounts/", include("apps.accounts.urls")),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

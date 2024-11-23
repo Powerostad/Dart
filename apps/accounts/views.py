@@ -4,9 +4,7 @@ import requests
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, get_user_model, authenticate
-from django.urls import reverse
 from rest_framework import status,viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -19,7 +17,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import ProfileSerializer, UserDetailSerializer, UserLoginSerializer, UserLogoutSerializer
 from .models import CustomUser, Profile
 from apps.accounts.models import Profile,Stock,Transaction,Watchlist  # Import your Profile model
-from apps.accounts.forms import ProfileForm,TransactionForm  # This form will handle profile updates
 from rest_framework.views import APIView
 import io
 from apps.accounts.serializers import UserRegisterSerializer, UserLoginSerializer
@@ -130,6 +127,23 @@ class UserLogoutView(APIView):
         except Exception as e:
             # raise e
             return Response({"error": "Invalid token or logout failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = Profile.objects.get(user=request.user)
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        profile = Profile.objects.get(user=request.user)
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleOAuthSettings:

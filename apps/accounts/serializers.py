@@ -14,13 +14,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at')
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """Serializer for CRUD operations on Profile model"""
-    
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+
     class Meta:
         model = Profile
-        fields = ('id', 'user', 'first_name', 'last_name', 'phone_number', 'address', 
-                  'date_of_birth', 'profile_picture_url', 'bio', 'total_return', 'created_at', 'updated_at')
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        fields = [
+            'username', 'email', 'first_name', 'last_name',
+            'phone_number', 'date_of_birth', 'profile_picture_url', 'bio',
+            'created_at', 'updated_at'
+        ]
 
 
 class UserLoginSerializer(serializers.Serializer):
