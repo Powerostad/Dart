@@ -2,61 +2,23 @@ from urllib.parse import urlencode
 import jwt as jwt_lib
 import requests
 from django.conf import settings
-from django.http import Http404
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout, get_user_model, authenticate
-from rest_framework import status,viewsets
-from rest_framework.authtoken.models import Token
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model, authenticate
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import ProfileSerializer, UserDetailSerializer, UserLoginSerializer, UserLogoutSerializer
-from .models import CustomUser, Profile
-from apps.accounts.models import Profile,Stock,Transaction,Watchlist  # Import your Profile model
+from apps.accounts.models import Profile
 from rest_framework.views import APIView
 import io
 from apps.accounts.serializers import UserRegisterSerializer, UserLoginSerializer
 
 User = get_user_model()
 
-   
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = UserDetailSerializer
-    permission_classes = [IsAuthenticated]
-
-class UserDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserDetailSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return get_object_or_404(User, id=self.request.user.id)
-
-#class ProfileListCreateView(ListCreateAPIView):
- #   queryset = Profile.objects.all()
-  #  serializer_class = ProfileSerializer
-   # permission_classes = [IsAuthenticated]
-
-    #def perform_create(self, serializer):
-     #   serializer.save(user=self.request.user)
-     
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
-
-class ProfileDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return get_object_or_404(Profile, user=self.request.user)
 
 class UserRegisterView(APIView):
     permission_classes = (AllowAny,)
@@ -67,6 +29,16 @@ class UserRegisterView(APIView):
         serializer = self.serializer_class(data=payload)
         if serializer.is_valid():
             serializer.save()
+            username = serializer.validated_data['username']
+            parts = username.split(" ", 1)
+            first_name = parts[0]
+            last_name = parts[1] if len(parts) > 1 else ""
+            user = User.objects.get(email=serializer.validated_data['email'])
+            Profile.objects.create(
+                user=user,
+                first_name=first_name,
+                last_name=last_name,
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
