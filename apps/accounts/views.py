@@ -101,6 +101,14 @@ class UserLogoutView(APIView):
             return Response({"error": "Invalid token or logout failed."}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserDeleteAccount(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response(data="User Deleted!", status=status.HTTP_202_ACCEPTED)
+
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 

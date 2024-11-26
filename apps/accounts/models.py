@@ -36,24 +36,8 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.user.username}"
-    
 
-class Stock(models.Model):
-    stock_symbol = models.CharField(max_length=10, unique=True)
-    company_name = models.CharField(max_length=255)
-    market_cap = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
-    current_price = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        indexes = [
-            models.Index(fields=['stock_symbol'], name='idx_stocks_symbol'),
-        ]
 
-    def __str__(self):
-        return f"{self.stock_symbol} - {self.company_name}"
-    
 class Trade(models.Model):
     TRADE_TYPES = [
         ('Buy', 'Buy'),
@@ -76,21 +60,7 @@ class Trade(models.Model):
     def __str__(self):
         return f"{self.trade_type} - {self.stock.stock_symbol} - {self.quantity} shares"
     
-class Watchlist(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('user', 'stock')  # Ensure uniqueness of the User-Stock pair
-        indexes = [
-            models.Index(fields=['user'], name='idx_watchlist_userid'),
-            models.Index(fields=['stock'], name='idx_watchlist_stockid'),
-        ]
-
-    def __str__(self):
-        return f"{self.user.username} - {self.stock.stock_symbol}"
-    
     
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
