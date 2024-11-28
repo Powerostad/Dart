@@ -1,82 +1,86 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split  # for splitting data into test cases
-from sklearn.ensemble import GradientBoostingRegressor  # class for creating a boosting gradient model for regression
-from sklearn.metrics import mean_squared_error, r2_score  # for calculating Mean Squared Error and R² Score
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error, r2_score
 from fpdf import FPDF
 
 # DataSet Uploading
-file_path = 'BTC-USD.csv'
-data = pd.read_csv(file_path)
+file_path = 'data\\EURUSD_Candlestick_1_D_BID_01.01.2011-08.06.2024.csv'
 
-print("First 5 records")
+try:
+    data = pd.read_csv(file_path)
+    print("Data loaded successfully.")
+except FileNotFoundError:
+    print("Error: File not found. Check the file path.")
+    exit()
+
+# Print first few records to check structure
+print("First 5 records:")
 print(data.head())
 
-# Converting date column and deleting (all we need is numerical data)
-data['Date'] = pd.to_datetime(data['Date'])
-data.drop('Date', axis=1, inplace=True)  # حذف ستون تاریخ
+# Convert date column and delete it
+if 'Gmt time' in data.columns:
+    data['Date'] = pd.to_datetime(data['Gmt time'].str.split(' ').str[0], format="%d.%m.%Y")
+    data.drop(['Date', 'Gmt time'], axis=1, inplace=True)  # حذف ستون تاریخ
+    print("Date conversion successful.")
+else:
+    print("Error: 'Gmt time' column not found.")
+    exit()
 
-# Delete cells with missing data
+# Drop missing values
 data.dropna(inplace=True)
 
-# Check data type and converting them
-data['Open'] = data['Open'].astype(float)
-data['High'] = data['High'].astype(float)
-data['Low'] = data['Low'].astype(float)
-data['Close'] = data['Close'].astype(float)
-data['Volume'] = data['Volume'].astype(float)
+# Convert columns to float
+for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+    if col in data.columns:
+        data[col] = data[col].astype(float)
+    else:
+        print(f"Error: Column '{col}' not found in data.")
+        exit()
 
-# Choose attributes (X) and Goal (Y)
-X = data[['Open', 'High', 'Low', 'Volume']]  # attributes
-y = data['Close']  # goal
+# Split data into features and target
+X = data[['Open', 'High', 'Low', 'Volume']]
+y = data['Close']
 
-# Splitting data
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print("Data split into training and testing sets.")
 
-# Creating the GBM Model (better be for regression to work with crypto)
+# Create and train model
 gbmModel = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
-
-# Training model
 gbmModel.fit(X_train, y_train)
+print("Model training completed.")
 
-# Prediction
+# Predictions
 y_pred = gbmModel.predict(X_test)
 
-# Calculate error
-mse = mean_squared_error(y_test, y_pred, squared=False)
+# Calculate error metrics
+mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
 r2 = r2_score(y_test, y_pred)
-mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100   #درصد خطا
+mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
 
 print(f"\nMean Squared Error: {mse:.2f}")
 print(f"Root Mean Squared Error: {rmse:.2f}")
 print(f"R² Score: {r2:.2f}")
 print(f"Mean Absolute Percentage Error (MAPE): {mape:.2f}%")
 
-# Create PDF file + add data
+# Generate PDF report
 pdf = FPDF()
 pdf.add_page()
-
 pdf.set_font("Arial", size=14)
 pdf.cell(200, 10, txt="Bitcoin Price Prediction Results", ln=True, align='C')
 pdf.cell(200, 10, txt=f"Mean Squared Error: {mse:.2f}", ln=True, align='L')
 pdf.cell(200, 10, txt=f"Root Mean Squared Error: {rmse:.2f}", ln=True, align='L')
 pdf.cell(200, 10, txt=f"R² Score: {r2:.2f}", ln=True, align='L')
-pdf.cell(200, 10, txt="Predicted vs Actual (First 100 Records):", ln=True, align='L')
-
-# Print 100 records of predictions and real data
-num_records = min(100, len(y_test))
-for i in range(num_records):
-    predicted = f"Predicted: {y_pred[i]:.2f}, Actual: {y_test.iloc[i]:.2f}"
-    pdf.cell(200, 10, txt=predicted, ln=True, align='L')
-
-# Save the PDF file
-output_path = r'BTC_Prediction_Report.pdf'
+pdf.cell(200, 10, txt=f"Mean Absolute Percentage Error (MAPE): {mape:.2f}%", ln=True, align='L')
+output_path = 'Prediction_Report.pdf'
 pdf.output(output_path)
 print(f"PDF report saved at: {output_path}")
 
-# Plot comparison of actual and predicted values
+# Plot actual vs predicted values
 plt.figure(figsize=(10, 5))
 plt.plot(y_test.values[:100], label='Actual', color='b')
 plt.plot(y_pred[:100], label='Predicted', color='r')
