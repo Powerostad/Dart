@@ -38,6 +38,7 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
         try:
             # Parse the incoming JSON data
             data = json.loads(text_data)
+            print(data)
             message = data.get('message')
             conversation_id = data.get('conversation_id')
 
@@ -52,7 +53,8 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
             # Ensure conversation exists or create new
             conversation = await self.get_or_create_conversation(
                 conversation_id,
-                self.scope['user']
+                self.scope['user'],
+                message
             )
 
             # Save user message
@@ -77,7 +79,7 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
             full_response = []
 
             # Stream the AI response
-            async for chunk in await self.stream_ai_response(client, chat_history, message):
+            async for chunk in self.stream_ai_response(client, chat_history, message):
                 # Send each chunk
                 await self.send(text_data=json.dumps({
                     'type': 'stream',
@@ -106,6 +108,7 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
                 'message': 'Invalid JSON format'
             }))
         except Exception as e:
+            raise e
             logger.error(f"Error in WebSocket: {str(e)}")
             await self.send(text_data=json.dumps({
                 'type': 'error',
@@ -116,13 +119,15 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
     def get_or_create_conversation(
             self,
             conversation_id: str,
-            user: User
+            user: User,
+            user_message: str
     ) -> Conversation:
         """
         Get an existing conversation or create a new one
 
         :param conversation_id: Optional existing conversation ID
         :param user: Authenticated user
+        :param user_message: Message sent by the user
         :return: Conversation instance
         """
         if conversation_id:
@@ -137,7 +142,7 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
         # Create new conversation
         return Conversation.objects.create(
             user=user,
-            title="New Conversation"
+            title=user_message[:20] if len(user_message) > 20 else user_message,
         )
 
     @database_sync_to_async
