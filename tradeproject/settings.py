@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     # APPS
     'apps.accounts',
     'apps.dashboard',
+    'apps.forex',
+    "apps.chatbot",
 
     # 3rd party apps
     'rest_framework',
@@ -276,3 +278,4 @@ if not DEBUG:
     CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']
 
 METATRADER_URL = os.environ.get('METATRADER_URL')
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
