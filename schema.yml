@@ -205,6 +205,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
+  /api/chatbot/history/:
+    get:
+      operationId: user_all_conversation_history
+      description: Get All conversation of user with AI
+      tags:
+        - api
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
 components:
   schemas:
     PatchedProfile:

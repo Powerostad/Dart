@@ -27,6 +27,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('apps.dashboard.urls', namespace='main')),
     path("api/accounts/", include("apps.accounts.urls")),
+    path("api/chatbot/", include("apps.chatbot.urls")),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
 
     # Optional UI:
