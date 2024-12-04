@@ -15,6 +15,9 @@ class AligatorAlgorithm(TradingAlgorithm):
 
 
     def _handle_df_needs(self, df):
+        key = list(df.keys())[0]
+
+        df = pd.DataFrame(df[key])
         df.rename(columns={'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'},
                             inplace=True)
         df["time"] = pd.to_datetime(df["time"], unit='s')
@@ -120,6 +123,9 @@ class MHarrisSystematic(TradingAlgorithm):
         pass
 
     def _handle_df_needs(self, df_copy):
+        key = list(df_copy.keys())[0]
+
+        df = pd.DataFrame(df_copy[key])
         df_copy.rename(columns={'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'},
                             inplace=True)
         df_copy["time"] = pd.to_datetime(df_copy["time"], unit='s')
@@ -193,6 +199,9 @@ class NadayaraWatsonFullStrategy15Min(TradingAlgorithm):
         self.bw = 7
 
     def _handle_df_needs(self, df_copy):
+        key = list(df_copy.keys())[0]
+
+        df = pd.DataFrame(df_copy[key])
         df_copy.rename(columns={'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'},
                             inplace=True)
         df_copy["time"] = pd.to_datetime(df_copy["time"], unit='s')
