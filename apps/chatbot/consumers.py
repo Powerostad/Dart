@@ -1,14 +1,14 @@
 import json
 from typing import List, Dict, AsyncGenerator
+from logging import getLogger
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
-from groq import AsyncGroq
 from django.contrib.auth import get_user_model
-from logging import getLogger
 
 from apps.chatbot.models import Conversation, ConversationMessage
+from groq import AsyncGroq
 
 logger = getLogger(__name__)
 User = get_user_model()
@@ -23,12 +23,13 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
         """
         Handle new WebSocket connection
         """
-        # Ensure user is authenticated
-        if not self.scope['user'].is_authenticated:
+        user = self.scope['user']
+        if not user.is_authenticated:
+            logger.warning("Unauthorized connection attempt")
             await self.close()
             return
 
-        # Accept the WebSocket connection
+        logger.info(f"WebSocket connected for user: {user}")
         await self.accept()
 
     async def receive(self, text_data=None, bytes_data=None):
@@ -36,199 +37,102 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
         Handle incoming WebSocket messages
         """
         try:
-            # Parse the incoming JSON data
+            logger.debug(f"Received WebSocket data: {text_data}")
             data = json.loads(text_data)
-            print(data)
             message = data.get('message')
             conversation_id = data.get('conversation_id')
 
-            # Validate message
             if not message:
+                logger.warning("Received invalid message payload with no 'message' field")
                 await self.send(text_data=json.dumps({
                     'type': 'error',
                     'message': 'No message provided'
                 }))
                 return
 
-            # Ensure conversation exists or create new
-            conversation = await self.get_or_create_conversation(
-                conversation_id,
-                self.scope['user'],
-                message
-            )
+            logger.info(f"Processing message: {message} for conversation ID: {conversation_id}")
+            conversation = await self.get_or_create_conversation(conversation_id, self.scope['user'], message)
+            logger.info(f"Using conversation ID: {conversation.id}")
 
-            # Save user message
-            await self.save_message(
-                conversation,
-                'user',
-                message
-            )
+            await self.save_message(conversation, 'user', message)
+            logger.debug(f"Saved user message: {message}")
 
-            # Initialize Groq client
             client = AsyncGroq(api_key=settings.GROQ_API_KEY)
-
-            # Retrieve conversation history
             chat_history = await self.get_conversation_history(conversation)
+            logger.debug(f"Retrieved conversation history: {chat_history}")
 
-            # Send typing indicator
-            await self.send(text_data=json.dumps({
-                'type': 'typing_start'
-            }))
+            await self.send(text_data=json.dumps({'type': 'typing_start'}))
+            logger.info("Sent typing indicator to user")
 
-            # Prepare to collect full response for saving
             full_response = []
 
-            # Stream the AI response
             async for chunk in self.stream_ai_response(client, chat_history, message):
-                # Send each chunk
+                logger.debug(f"Streaming AI response chunk: {chunk}")
                 await self.send(text_data=json.dumps({
                     'type': 'stream',
                     'content': chunk
                 }))
-
-                # Collect full response
                 full_response.append(chunk)
 
-            # Save AI response
-            await self.save_message(
-                conversation,
-                'assistant',
-                ''.join(full_response)
-            )
+            await self.save_message(conversation, 'assistant', ''.join(full_response))
+            logger.info(f"AI response saved for conversation ID: {conversation.id}")
 
-            # End of streaming
             await self.send(text_data=json.dumps({
                 'type': 'stream_end',
                 'conversation_id': str(conversation.id)
             }))
+            logger.info("Sent stream end indicator to user")
 
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.error(f"JSONDecodeError: {e}")
             await self.send(text_data=json.dumps({
                 'type': 'error',
                 'message': 'Invalid JSON format'
             }))
         except Exception as e:
-            raise e
-            logger.error(f"Error in WebSocket: {str(e)}")
+            logger.exception(f"Unexpected error: {e}")
             await self.send(text_data=json.dumps({
                 'type': 'error',
-                'message': str(e)
+                'message': 'An unexpected error occurred. Please try again.'
             }))
 
     @database_sync_to_async
-    def get_or_create_conversation(
-            self,
-            conversation_id: str,
-            user: User,
-            user_message: str
-    ) -> Conversation:
-        """
-        Get an existing conversation or create a new one
-
-        :param conversation_id: Optional existing conversation ID
-        :param user: Authenticated user
-        :param user_message: Message sent by the user
-        :return: Conversation instance
-        """
+    def get_or_create_conversation(self, conversation_id: str, user: User, user_message: str) -> Conversation:
+        logger.debug(f"Retrieving or creating conversation with ID: {conversation_id} for user: {user}")
         if conversation_id:
             try:
-                return Conversation.objects.get(
-                    id=conversation_id,
-                    user=user
-                )
+                return Conversation.objects.get(id=conversation_id, user=user)
             except Conversation.DoesNotExist:
-                pass
+                logger.info(f"Conversation with ID {conversation_id} not found. Creating a new one.")
 
-        # Create new conversation
-        return Conversation.objects.create(
+        new_conversation = Conversation.objects.create(
             user=user,
             title=user_message[:20] if len(user_message) > 20 else user_message,
         )
+        logger.info(f"Created new conversation with ID: {new_conversation.id}")
+        return new_conversation
 
     @database_sync_to_async
-    def save_message(
-            self,
-            conversation: Conversation,
-            role: str,
-            content: str
-    ):
-        """
-        Save a message to the conversation
-
-        :param conversation: Conversation instance
-        :param role: Message role (user/assistant)
-        :param content: Message content
-        """
-        ConversationMessage.objects.create(
-            conversation=conversation,
-            role=role,
-            content=content
-        )
+    def save_message(self, conversation: Conversation, role: str, content: str):
+        logger.debug(f"Saving message for conversation ID: {conversation.id}, role: {role}, content: {content}")
+        ConversationMessage.objects.create(conversation=conversation, role=role, content=content)
+        logger.info(f"Message saved for conversation ID: {conversation.id}, role: {role}")
 
     @database_sync_to_async
-    def get_conversation_history(
-            self,
-            conversation: Conversation,
-            limit: int = 10
-    ) -> List[Dict[str, str]]:
-        """
-        Retrieve recent conversation history
-
-        :param conversation: Conversation instance
-        :param limit: Number of recent messages to retrieve
-        :return: List of message dictionaries
-        """
-        # Retrieve recent messages, limited to last 10
+    def get_conversation_history(self, conversation: Conversation, limit: int = 10) -> List[Dict[str, str]]:
+        logger.debug(f"Retrieving last {limit} messages for conversation ID: {conversation.id}")
         messages = conversation.messages.order_by('-created_at')[:limit]
 
-        # Prepare messages in Groq-compatible format
-        history = []
-
-        # Add system message
-        history.append({
-            "role": "system",
-            "content": "You are a helpful AI assistant. Provide clear and concise responses."
-        })
-
-        # Add conversation messages in chronological order
-        for message in reversed(list(messages)):
-            history.append({
-                "role": message.role,
-                "content": message.content
-            })
-
+        history = [{"role": "system", "content": "You are a helpful AI assistant. Provide clear and concise responses."}]
+        history += [{"role": message.role, "content": message.content} for message in reversed(list(messages))]
+        logger.info(f"Retrieved conversation history for conversation ID: {conversation.id}")
         return history
 
-    async def stream_ai_response(
-            self,
-            client: AsyncGroq,
-            chat_history: List[Dict[str, str]],
-            new_message: str
-    ) -> AsyncGenerator[str, None]:
-        """
-        Stream AI response using Groq library
+    async def stream_ai_response(self, client: AsyncGroq, chat_history: List[Dict[str, str]], new_message: str) -> AsyncGenerator[str, None]:
+        logger.debug("Streaming AI response")
+        messages = chat_history + [{"role": "user", "content": new_message}]
+        stream = await client.chat.completions.create(model="mixtral-8x7b-32768", messages=messages, stream=True)
 
-        :param client: Async Groq client
-        :param chat_history: Previous conversation context
-        :param new_message: Latest user message
-        :return: Async generator of response chunks
-        """
-        # Prepare full message list
-        messages = chat_history + [
-            {
-                "role": "user",
-                "content": new_message
-            }
-        ]
-
-        # Stream completion
-        stream = await client.chat.completions.create(
-            model="mixtral-8x7b-32768",  # or another Groq model
-            messages=messages,
-            stream=True
-        )
-
-        # Generate chunks
         async for chunk in stream:
             if chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
