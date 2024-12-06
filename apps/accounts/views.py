@@ -47,38 +47,35 @@ class UserLoginView(APIView):
     serializer_class = UserLoginSerializer
 
     def post(self, request):
-        payload: dict = JSONParser().parse(stream=io.BytesIO(request.body))
+        payload = JSONParser().parse(stream=io.BytesIO(request.body))
+
         login_serializer = self.serializer_class(data=payload)
+        if not login_serializer.is_valid():
+            return Response(login_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if login_serializer.is_valid():
-            # Authenticate the user with the LoginSerializer's data
-            username_or_email = login_serializer.validated_data['username_or_email']
-            password = login_serializer.validated_data['password']
+        username_or_email = login_serializer.validated_data['username_or_email']
+        password = login_serializer.validated_data['password']
 
-            # Use the existing authenticate_user method from UserSerializer or create a new one in the LoginSerializer
-            user = authenticate(username=username_or_email, password=password)
-            if not user:
-                # Try to authenticate with email
-                try:
-                    user_obj = User.objects.get(email=username_or_email)
-                    user = authenticate(username=user_obj.username, password=password)
-                except User.DoesNotExist:
-                    return Response({"error": "Invalid username/email or password."},
-                                    status=status.HTTP_400_BAD_REQUEST)
+        user = authenticate(username=username_or_email, password=password)
+        if not user:
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                return Response({"error": "Invalid username/email or password."},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-            if user and user.is_active:
-                # Generate JWT tokens
-                refresh = RefreshToken.for_user(user)
-                return Response({
-                    "message": "Login successful.",
-                    "user_id": user.id,
-                    "access": str(refresh.access_token),
-                    "refresh": str(refresh)
-                }, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Invalid username/email or password."}, status=status.HTTP_400_BAD_REQUEST)
+        if user and user.is_active:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "message": "Login successful.",
+                "user_id": user.id,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }, status=status.HTTP_200_OK)
 
-        return Response(login_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Invalid username/email or password."},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 class UserLogoutView(APIView):
     permission_classes = [IsAuthenticated]
