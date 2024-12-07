@@ -18,6 +18,8 @@ RUN apt-get update \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+RUN echo "[global]" > /etc/pip.conf && \
+    echo "index-url = https://mirror-pypi.runflare.com/simple" >> /etc/pip.conf
 # Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
