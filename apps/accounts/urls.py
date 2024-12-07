@@ -11,8 +11,9 @@ urlpatterns = [
     path("login/", views.UserLoginView.as_view(), name="login"),
     path("logout/", views.UserLogoutView.as_view(), name="logout"),
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    path("subscription_plans/", views.SubscriptionPlansView.as_view(), name='subscription_plan'),
 
-    path("token/", jwt_views.TokenObtainPairView.as_view(), name='token'),
+    path("token/validate/", jwt_views.TokenVerifyView.as_view(), name='token'),
     path("token/refresh/", jwt_views.TokenRefreshView.as_view(), name='token-refresh'),
 
     path('google/login/', GoogleAuthRedirectView.as_view(), name='google-login'),
