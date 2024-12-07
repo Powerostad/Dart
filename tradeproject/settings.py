@@ -63,9 +63,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -280,10 +280,7 @@ SPECTACULAR_SETTINGS = {
     }
 }
 
-# Allow all origins
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React development server
-]
+CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = True  # Important for sending cookies!
 
@@ -292,7 +289,7 @@ SESSION_COOKIE_SAMESITE = 'Lax'  # Or 'Strict' for production
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'  # Or 'Strict' for production
 CSRF_COOKIE_HTTPONLY = False  # Must be False to allow JS access
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']  # Add your frontend domain
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']  # Add your frontend domain
 
 # Production settings should use secure cookies
 if not DEBUG:
