@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from apps.accounts.models import Profile
+from apps.accounts.models import Profile, SubscriptionPlan
 
 User = get_user_model()
 
@@ -59,3 +59,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
