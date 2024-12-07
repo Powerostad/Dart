@@ -4,6 +4,8 @@ from rest_framework_simplejwt import views as jwt_views
 
 from .views import GoogleCallbackView, GoogleAuthRedirectView
 
+app_name = 'accounts'
+
 urlpatterns = [
     path("register/", views.UserRegisterView.as_view(), name="register"),
     path("login/", views.UserLoginView.as_view(), name="login"),
