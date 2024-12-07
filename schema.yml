@@ -151,60 +151,103 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserRegister'
           description: ''
-  /api/accounts/token/:
+  /api/accounts/token/validate/:
     post:
-      operationId: api_accounts_token_create
-      description: |-
-        Takes a set of user credentials and returns an access and refresh JSON web
-        token pair to prove the authentication of those credentials.
+      summary: Validate a JWT token
+      description: Validates the provided JWT token in the Authorization header.
+      operationId: validateToken
       tags:
-      - api
+        - Authentication
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TokenObtainPair'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TokenObtainPair'
-        required: true
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The JWT token to validate.
       responses:
         '200':
+          description: Token is valid.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenObtainPair'
-          description: ''
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Token is valid"
+        '400':
+          description: Bad request or malformed token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Token is invalid"
+        '401':
+          description: Unauthorized or expired token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Token has expired or is invalid"
   /api/accounts/token/refresh/:
     post:
-      operationId: api_accounts_token_refresh_create
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
+      summary: Refresh a JWT token
+      description: Refreshes the access token using a valid refresh token.
+      operationId: refreshToken
       tags:
-      - api
+        - Authentication
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TokenRefresh'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TokenRefresh'
-        required: true
+              type: object
+              properties:
+                refresh:
+                  type: string
+                  description: The refresh token to get a new access token.
       responses:
         '200':
+          description: Successfully refreshed token.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenRefresh'
-          description: ''
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: New access token.
+                    example: "new_access_token_string_here"
+        '400':
+          description: Bad request or missing refresh token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Invalid or missing refresh token"
+        '401':
+          description: Unauthorized or invalid refresh token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Invalid or expired refresh token"
   /api/chatbot/history/:
     get:
       operationId: user_all_conversation_history
@@ -216,6 +259,34 @@ paths:
       responses:
         '200':
           description: No response body
+
+  /api/account/subscription_plans/:
+    get:
+      summary: Get all subscription plans
+      description: Fetches all available subscription plans.
+      operationId: getSubscriptionPlans
+      tags:
+        - Subscription Plans
+      responses:
+        '200':
+          description: A list of subscription plans.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlan'
+        '500':
+          description: Server error or internal failure.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Internal server error"
+
 components:
   schemas:
     PatchedProfile:
@@ -440,6 +511,46 @@ components:
       - password2
       - updated_at
       - username
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The ID of the subscription plan.
+          example: 1
+        name:
+          type: string
+          description: The name of the subscription plan.
+          example: "Premium"
+        description:
+          type: string
+          description: A detailed description of the subscription plan.
+          example: "Access to all premium content and features."
+        price:
+          type: number
+          format: decimal
+          description: The price of the subscription plan.
+          example: 100000.500
+        billing_interval:
+          type: string
+          description: Billing interval for the subscription plan (monthly or yearly).
+          enum:
+            - "monthly"
+            - "yearly"
+          example: "monthly"
+        features:
+          type: array
+          items:
+            type: string
+          description: List of features included in the subscription plan.
+          example:
+            - "Unlimited access"
+            - "Priority support"
+        is_active:
+          type: boolean
+          description: Indicates whether the subscription plan is active.
+          example: true
+
   securitySchemes:
     jwtAuth:
       type: http
