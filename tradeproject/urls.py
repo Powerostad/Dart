@@ -26,8 +26,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 urlpatterns = [
     path('api/', include([
         path('dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
-        path('accounts/', include('apps.accounts.urls'), namespace='accounts'),
-        path('chatbot/', include('apps.chatbot.urls'), namespace='chatbot'),
+        path('accounts/', include('apps.accounts.urls', namespace='accounts')),
+        path('chatbot/', include('apps.chatbot.urls', namespace='chatbot')),
         path('schema/', SpectacularAPIView.as_view(), name='schema'),
         path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
