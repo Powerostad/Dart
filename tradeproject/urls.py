@@ -26,6 +26,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
+    path('api/accounts/', include('apps.accounts.urls')),
     path('', include('apps.dashboard.urls', namespace='main')),
     path('accounts/login/', allauth_views.LoginView.as_view(), name='account_login'),
     
