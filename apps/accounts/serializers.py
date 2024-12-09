@@ -1,7 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from apps.accounts.models import Profile
+from apps.accounts.models import Profile, SubscriptionPlan
 
 User = get_user_model()
 
@@ -14,18 +14,24 @@ class UserDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at')
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """Serializer for CRUD operations on Profile model"""
-    
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+
     class Meta:
         model = Profile
-        fields = ('id', 'user', 'first_name', 'last_name', 'phone_number', 'address', 
-                  'date_of_birth', 'profile_picture_url', 'bio', 'total_return', 'created_at', 'updated_at')
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        fields = [
+            'username', 'email', 'first_name', 'last_name',
+            'phone_number', 'date_of_birth', 'profile_picture_url', 'bio',
+            'created_at', 'updated_at'
+        ]
 
 
 class UserLoginSerializer(serializers.Serializer):
     username_or_email = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
+
+class UserLogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -53,3 +59,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
