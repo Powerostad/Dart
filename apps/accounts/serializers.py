@@ -37,11 +37,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
+    def validate(self, data):
+        if data['password1'] != data['password2']:
+            raise serializers.ValidationError()
+        return data
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password1', 'password2', 'created_at', 'updated_at')
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        fields = ('id', 'username', 'email', "plan", 'password1', 'password2', 'created_at', 'updated_at')
+        read_only_fields = ('id', "plan", 'created_at', 'updated_at')
 
     def validate(self, attrs):
         if attrs['password1'] != attrs['password2']:

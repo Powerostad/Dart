@@ -7,8 +7,10 @@ from django.conf import settings
 
 class CustomUser(AbstractUser):
     email = models.EmailField(max_length=255, unique=True)
+    plan = models.ForeignKey(to="SubscriptionPlan", on_delete=models.PROTECT, related_name="users", default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     
     class Meta:
         indexes = [
