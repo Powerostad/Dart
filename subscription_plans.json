@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Free Plan",
+    "description": "Get started with basic trading tools and resources for beginners.",
+    "price": 0.000,
+    "billing_interval": "monthly",
+    "features": {
+      "options": [
+        "Market Starter",
+        "Basic Trader",
+        "Free Portfolio",
+        "Beginner Edge"
+      ]
+    },
+    "is_active": true
+  },
+  {
+    "name": "Premium Plans - Tier 1",
+    "description": "Unlock advanced trading tools and insights for professional traders.",
+    "price": 49.999,
+    "billing_interval": "monthly",
+    "features": {
+      "options": [
+        "Pro Trader",
+        "Investor Advantage",
+        "Growth Edge",
+        "Trade Master"
+      ]
+    },
+    "is_active": true
+  },
+  {
+    "name": "Premium Plans - Tier 2",
+    "description": "Comprehensive investment tools and priority support for elite traders.",
+    "price": 99.999,
+    "billing_interval": "monthly",
+    "features": {
+      "options": [
+        "Elite Investor",
+        "Premium Portfolio",
+        "Wealth Accelerator",
+        "Advanced Trader"
+      ]
+    },
+    "is_active": true
+  },
+  {
+    "name": "Premium Plans - Tier 3",
+    "description": "The ultimate package for trading titans and market visionaries.",
+    "price": 199.999,
+    "billing_interval": "monthly",
+    "features": {
+      "options": [
+        "Trading Titan",
+        "Capital Elite",
+        "Market Visionary",
+        "Investor Prime"
+      ]
+    },
+    "is_active": true
+  }
+]
