@@ -2,6 +2,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+from django.utils.crypto import get_random_string
 
 # from apps.dashboard.models import Stock
 
@@ -9,6 +10,16 @@ class CustomUser(AbstractUser):
     email = models.EmailField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    referral_code = models.CharField(max_length=10, unique=True, blank=True)
+    referral_points = models.PositiveIntegerField(default=0)
+    referred_by = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='referrals'
+    )
+    
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            self.referral_code = get_random_string(10).upper()  # Generate a unique referral code
+        super().save(*args, **kwargs)
     
     class Meta:
         indexes = [

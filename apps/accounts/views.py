@@ -40,6 +40,17 @@ class UserRegisterView(APIView):
                 first_name=first_name,
                 last_name=last_name,
             )
+             # Handle referral code logic
+            referred_by_code = payload.get("referred_by", None)
+            if referred_by_code:
+                try:
+                    referring_user = User.objects.get(referral_code=referred_by_code)
+                    # Assign points to the referring user
+                    referring_user.profile.points += 10  # Example: 10 points
+                    referring_user.profile.save()
+                except User.DoesNotExist:
+                    # If referral code is invalid, log or ignore
+                    pass
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -302,3 +313,12 @@ class GoogleCallbackView(APIView):
             'refresh': refresh,
             'access': refresh.access_token,
         }
+        
+        
+class ReferralCodeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"referral_code": request.user.referral_code})        
+    
+    
