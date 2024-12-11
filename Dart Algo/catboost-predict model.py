@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 model = joblib.load('catboost_model.pkl')
 
 #loading new dataset
-new_df = pd.read_csv('data/EURUSD_Candlestick_15_M_BID_01.02.2023-17.02.2024.csv')
+new_df = pd.read_csv('data/EURUSD_Candlestick_5_M_BID_01.02.2023-17.02.2024.csv')
 
 #cleaning
 new_df = new_df[new_df['Volume'] > 0]
