@@ -130,8 +130,12 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
 
     async def stream_ai_response(self, client: AsyncGroq, chat_history: List[Dict[str, str]], new_message: str) -> AsyncGenerator[str, None]:
         logger.debug("Streaming AI response")
-        messages = chat_history + [{"role": "user", "content": new_message}]
-        stream = await client.chat.completions.create(model="mixtral-8x7b-32768", messages=messages, stream=True)
+        system_message = {
+            "role": "system",
+            "content": "You are a specialized finance and trading educational assistant. Your primary purpose is to help users understand and learn about trading and finance concepts. Guidelines:\n1. Only discuss topics related to finance and trading\n2. Provide educational explanations and insights\n3. Never give financial predictions or investment advice\n4. If asked about predictions, explain that you cannot provide them\n5. Respond in Persian when the user communicates in Persian"
+        }
+        messages = [system_message] + chat_history + [{"role": "user", "content": new_message}]
+        stream = await client.chat.completions.create(model="gemma2-9b-it", messages=messages, stream=True)
 
         async for chunk in stream:
             if chunk.choices[0].delta.content:
