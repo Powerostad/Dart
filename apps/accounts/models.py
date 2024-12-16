@@ -19,7 +19,11 @@ class CustomUser(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.referral_code:
-            self.referral_code = get_random_string(10).upper()  # Generate a unique referral code
+            while True:
+                code = get_random_string(10, allowed_chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+                if not CustomUser.objects.filter(referral_code=code).exists():
+                    self.referral_code = code
+                    break
         super().save(*args, **kwargs)
 
     class Meta:
