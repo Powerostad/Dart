@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.dashboard',
     'apps.forex',
     "apps.chatbot",
+    'apps.blog',
 
     # 3rd party apps
     'rest_framework',

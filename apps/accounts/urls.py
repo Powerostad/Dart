@@ -2,7 +2,7 @@ from django.urls import path,include
 from apps.accounts import views
 from rest_framework_simplejwt import views as jwt_views
 
-from .views import GoogleCallbackView, GoogleAuthRedirectView
+from .views import GoogleCallbackView, GoogleAuthRedirectView, ReferralCodeView, UserRegisterView
 
 app_name = 'accounts'
 
@@ -18,5 +18,7 @@ urlpatterns = [
 
     path('google/login/', GoogleAuthRedirectView.as_view(), name='google-login'),
     path('google/callback/', GoogleCallbackView.as_view(), name='google-callback'),
+    path('register/', UserRegisterView.as_view(), name='register'),
+    path('referral-code/', ReferralCodeView.as_view(), name='referral-code'),
 
 ]
