@@ -6,3 +6,26 @@ services:
       - .:/app
     ports:
       - "9000:8000"
+#    environment:
+#      - METATRADER_URL=mt5
+#    networks:
+#      - dart_trading
+
+
+#  mt5:
+#    image: gmag11/metatrader5_vnc
+#    container_name: mt5
+#    volumes:
+#      - ./config:/config
+#    ports:
+#      - 4000:3000
+#      - 8001:8001
+#    environment:
+#      - CUSTOM_USER=dart
+#      - PASSWORD=Dart1342
+#    networks:
+#      - dart_trading
+#
+#networks:
+#  dart_trading:
+#    driver: bridge
