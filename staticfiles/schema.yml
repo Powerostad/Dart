@@ -1,0 +1,725 @@
+openapi: 3.0.3
+info:
+  title: Dart API
+  version: 1.0.0
+  description: Dart Trading Platform
+paths:
+  /api/blog/create/:
+    post:
+      operationId: blog_create
+      description: Create a new blog post.
+      tags:
+        - Blogs
+      security:
+        - jwtAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Blog'
+      responses:
+        '201':
+          description: Blog created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        '401':
+          description: Unauthorized
+  /api/blog/:
+    get:
+      summary: List all blogs
+      description: Retrieves a list of all blog posts.
+      operationId: listBlogs
+      tags:
+        - Blogs
+      responses:
+        '200':
+          description: List of blogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blog'
+  /api/blog/search/:
+    get:
+      summary: Search blogs
+      description: Allows users to search for blogs using query parameters.
+      operationId: searchBlogs
+      tags:
+        - Blogs
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Search query for blog titles or content.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of matching blogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blog'
+  /api/blog/{id}/update/:
+    put:
+      summary: Update a blog
+      description: Allows the blog author to update their blog post.
+      operationId: updateBlog
+      tags:
+        - Blogs
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the blog to update.
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Blog'
+      responses:
+        '200':
+          description: Blog updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Blog not found
+  /api/blog/{id}/delete/:
+    delete:
+      summary: Delete a blog
+      description: Allows the blog author to delete their blog post.
+      operationId: deleteBlog
+      tags:
+        - Blogs
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the blog to delete.
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Blog deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Blog not found
+  /api/blog/my-blogs/:
+    get:
+      summary: List user-specific blogs
+      description: Retrieves a list of blogs authored by the authenticated user.
+      operationId: userBlogs
+      tags:
+        - Blogs
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: List of user blogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blog'
+        '401':
+          description: Unauthorized
+  /api/accounts/google/callback/:
+    get:
+      operationId: api_accounts_google_callback_retrieve
+      description: Handles the OAuth2 callback from Google and issues JWT tokens.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/accounts/google/login/:
+    get:
+      operationId: api_accounts_google_login_retrieve
+      description: |-
+        Initiates the Google OAuth2 flow by returning the authorization URL.
+        The frontend should redirect the user to this URL.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/accounts/login/:
+    post:
+      operationId: api_accounts_login_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLogin'
+          description: ''
+  /api/accounts/logout/:
+    post:
+      operationId: user_logout
+      tags:
+        - api
+      security:
+        - jwtAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+                  description: The refresh token to be blacklisted
+                  example: "your-refresh-token-here"
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful."
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Refresh token is required."
+          description: Refresh token is required
+
+  /api/accounts/profile/:
+    get:
+      operationId: api_accounts_profile_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    put:
+      operationId: api_accounts_profile_update
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/accounts/register/:
+    post:
+      operationId: api_accounts_register_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegister'
+          description: ''
+  /api/accounts/token/validate/:
+    post:
+      summary: Validate a JWT token
+      description: Validates the provided JWT token in the Authorization header.
+      operationId: validateToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The JWT token to validate.
+      responses:
+        '200':
+          description: Token is valid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Token is valid"
+        '400':
+          description: Bad request or malformed token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Token is invalid"
+        '401':
+          description: Unauthorized or expired token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Token has expired or is invalid"
+  /api/accounts/token/refresh/:
+    post:
+      summary: Refresh a JWT token
+      description: Refreshes the access token using a valid refresh token.
+      operationId: refreshToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+                  description: The refresh token to get a new access token.
+      responses:
+        '200':
+          description: Successfully refreshed token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: New access token.
+                    example: "new_access_token_string_here"
+        '400':
+          description: Bad request or missing refresh token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Invalid or missing refresh token"
+        '401':
+          description: Unauthorized or invalid refresh token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Invalid or expired refresh token"
+  /api/chatbot/history/:
+    get:
+      operationId: user_all_conversation_history
+      description: Get All conversation of user with AI
+      tags:
+        - api
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+
+  /api/accounts/subscription_plans/:
+    get:
+      summary: Get all subscription plans
+      description: Fetches all available subscription plans.
+      operationId: getSubscriptionPlans
+      tags:
+        - Subscription Plans
+      responses:
+        '200':
+          description: A list of subscription plans.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionPlan'
+        '500':
+          description: Server error or internal failure.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Internal server error"
+
+components:
+  schemas:
+    PatchedProfile:
+      type: object
+      description: Serializer for CRUD operations on Profile model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+        first_name:
+          type: string
+          maxLength: 255
+        last_name:
+          type: string
+          maxLength: 255
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        profile_picture_url:
+          type: string
+          format: uri
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        total_return:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedUserDetail:
+      type: object
+      description: Serializer for handling CRUD on the User model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Profile:
+      type: object
+      description: Serializer for CRUD operations on Profile model
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+          maxLength: 255
+        last_name:
+          type: string
+          maxLength: 255
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        profile_picture_url:
+          type: string
+          format: uri
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    UserDetail:
+      type: object
+      description: Serializer for handling CRUD on the User model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - id
+      - updated_at
+      - username
+    UserLogin:
+      type: object
+      properties:
+        username_or_email:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - username_or_email
+    UserRegister:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        phone_number:
+          type: string
+        referral_code:
+          type: string
+        password1:
+          type: string
+          writeOnly: true
+        password2:
+          type: string
+          writeOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - id
+      - password1
+      - password2
+      - updated_at
+      - username
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The ID of the subscription plan.
+          example: 1
+        name:
+          type: string
+          description: The name of the subscription plan.
+          example: "Premium"
+        description:
+          type: string
+          description: A detailed description of the subscription plan.
+          example: "Access to all premium content and features."
+        price:
+          type: number
+          format: decimal
+          description: The price of the subscription plan.
+          example: 100000.500
+        billing_interval:
+          type: string
+          description: Billing interval for the subscription plan (monthly or yearly).
+          enum:
+            - "monthly"
+            - "yearly"
+          example: "monthly"
+        features:
+          type: array
+          items:
+            type: string
+          description: List of features included in the subscription plan.
+          example:
+            - "Unlimited access"
+            - "Priority support"
+        is_active:
+          type: boolean
+          description: Indicates whether the subscription plan is active.
+          example: true
+    Blog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        content:
+          type: string
+        author:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          enum: [ draft, published ]
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        likes_count:
+          type: integer
+          description: The number of likes the blog has received.
+          readOnly: true
+
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
