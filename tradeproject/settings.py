@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
+    "phonenumber_field",
 ]
 
 MIDDLEWARE = [
