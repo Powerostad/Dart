@@ -3,11 +3,13 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from django.utils.crypto import get_random_string
+from phonenumber_field.modelfields import PhoneNumberField
 
 # from apps.dashboard.models import Stock
 
 class CustomUser(AbstractUser):
     email = models.EmailField(max_length=255, unique=True)
+    phone_number = PhoneNumberField(unique=True, region="IR")
     plan = models.ForeignKey(to="SubscriptionPlan", on_delete=models.PROTECT, related_name="users", default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -29,7 +29,10 @@ class UserRegisterView(APIView):
         payload: dict = JSONParser().parse(stream=io.BytesIO(request.body))
         serializer = self.serializer_class(data=payload)
         if serializer.is_valid():
-            serializer.save()
+            try:
+                serializer.save()
+            except ValidationError as e:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             username = serializer.validated_data['username']
             parts = username.split(" ", 1)
             first_name = parts[0]
