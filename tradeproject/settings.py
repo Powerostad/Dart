@@ -302,5 +302,8 @@ if not DEBUG:
     ]
     CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']
 
-METATRADER_URL = os.environ.get('METATRADER_URL')
+METATRADER_URL = os.environ.get('METATRADER_URL', "localhost")
+METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
+
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
+
