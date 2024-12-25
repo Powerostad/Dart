@@ -1,6 +1,32 @@
-class TradingAlgorithm:
-    def __init__(self):
-        pass
+from dataclasses import dataclass, asdict
+from enum import Enum, auto
+from typing import List
 
-    def get_signal(self, df):
-        raise NotImplementedError("Subclasses must implement the get_signal method.")
+import pandas as pd
+
+
+class SignalType(Enum):
+    BUY = auto()
+    SELL = auto()
+    NEUTRAL = auto()
+
+
+@dataclass
+class TradingSignal:
+    symbol: str
+    timeframe: str
+    signal_type: SignalType
+    confidence: float
+    algorithms_triggered: List[str]
+
+    def to_dict(self):
+        data = asdict(self)
+        data["signal_type"] = self.signal_type.name
+        return data
+
+class TradingAlgorithm:
+    def __init__(self, name: str):
+        self.name = name
+
+    def generate_signal(self, data: pd.DataFrame) -> SignalType:
+        raise NotImplementedError("Subclasses must implement this method.")
