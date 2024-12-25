@@ -18,7 +18,7 @@ services:
     expose:
       - "8000"
     networks:
-      - dart_trading
+      - dart_backend_network
     # Adding resource limits
     deploy:
       resources:
@@ -29,7 +29,7 @@ services:
           cpus: '0.5'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -37,9 +37,8 @@ services:
 
   mt5:
     image: gmag11/metatrader5_vnc
-    container_name: mt5
+    container_name: metatrader
     volumes:
-      # Using named volume for persistent configuration
       - mt5_config:/config
     expose:
       - "3000"
@@ -48,7 +47,7 @@ services:
       - CUSTOM_USER=dart
       - PASSWORD=${MT5_PASSWORD}
     networks:
-      - dart_trading
+      - dart_backend_network
     restart: unless-stopped
     deploy:
       resources:
@@ -70,9 +69,5 @@ volumes:
   mt5_config:    # Named volume for MT5 configuration
 
 networks:
-  dart_trading:
+  dart_backend_network:
     driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.28.0.0/16
