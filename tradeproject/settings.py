@@ -145,9 +145,9 @@ REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = int(os.environ.get('REDIS_PORT'))
 
 CHANNEL_LAYERS = {
-    'default': {
+    "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
-    },
+    }
 }
 
 
@@ -302,7 +302,7 @@ if not DEBUG:
     ]
     CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']
 
-METATRADER_URL = os.environ.get('METATRADER_URL', "localhost")
+METATRADER_URL = os.environ.get('METATRADER_URL', "127.0.0.1")
 METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')

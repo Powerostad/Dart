@@ -1,32 +1,78 @@
+version: '3.8'  # Explicitly declaring version for better compatibility
+
 services:
   web:
-    build: .
-    command: gunicorn "tradeproject.asgi:application" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4
-#    volumes:
-#      - .:/app
-    restart: always
-    ports:
-      - "9000:8000"
-#    environment:
-#      - METATRADER_URL=mt5
-#    networks:
-#      - dart_trading
-#
-#
-#  mt5:
-#    image: gmag11/metatrader5_vnc
-#    container_name: mt5
-#    volumes:
-#      - ./config:/config
-#    ports:
-#      - 4000:3000
-#      - 8001:8001
-#    environment:
-#      - CUSTOM_USER=dart
-#      - PASSWORD=Dart1342
-#    networks:
-#      - dart_trading
-#
-#networks:
-#  dart_trading:
-#    driver: bridge
+    build: 
+      context: .
+      # Adding build args for potential environment-specific builds
+      args:
+        - BUILD_ENV=production
+    # Modified command to be more production-friendly
+    command: gunicorn "tradeproject.asgi:application" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --worker-tmp-dir /dev/shm --max-requests 1000 --max-requests-jitter 50 --timeout 120
+    volumes:
+      # Using named volumes instead of bind mounts for better performance
+      - static_files:/app/static
+      - media_files:/app/media
+    restart: unless-stopped  # More specific restart policy
+    # Removing direct port exposure for production
+    expose:
+      - "8000"
+    networks:
+      - dart_trading
+    # Adding resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mt5:
+    image: gmag11/metatrader5_vnc
+    container_name: mt5
+    volumes:
+      # Using named volume for persistent configuration
+      - mt5_config:/config
+    expose:
+      - "3000"
+      - "8001"
+    environment:
+      - CUSTOM_USER=dart
+      - PASSWORD=${MT5_PASSWORD}
+    networks:
+      - dart_trading
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  static_files:  # Named volume for static files
+  media_files:   # Named volume for media files
+  mt5_config:    # Named volume for MT5 configuration
+
+networks:
+  dart_trading:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
