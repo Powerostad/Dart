@@ -10,13 +10,13 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from .serializers import ProfileSerializer, UserDetailSerializer, UserLoginSerializer, UserLogoutSerializer, \
-    SubscriptionPlanSerializer
+    SubscriptionPlanSerializer, EmailRequestSerializer
 from apps.accounts.models import Profile, SubscriptionPlan
 from rest_framework.views import APIView
 import io
 from apps.accounts.serializers import UserRegisterSerializer, UserLoginSerializer
+from utils.custom_smtp_server import smtp_server
 
 User = get_user_model()
 
@@ -324,4 +324,31 @@ class ReferralCodeView(APIView):
     def get(self, request):
         return Response({"referral_code": request.user.referral_code})        
     
-    
+
+class SendEmailAPIView(APIView):
+    """
+    API view to handle email sending.
+    """
+
+    def post(self, request, *args, **kwargs):
+        serializer = EmailRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            to_email = serializer.validated_data['to_email']
+            subject = serializer.validated_data['subject']
+            body = serializer.validated_data['body']
+            try:
+                smtp_server.send_email(to_email, subject, body)
+                return Response({"message": "Email sent successfully!"}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+#temporary for testing
+from utils.custom_smtp_server import CustomSMTPServer        
+class EmailTestView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        smtp_server = CustomSMTPServer()
+        smtp_server.send_email(email, "Test Email", "This is a test email.")
+        return Response({"message": "Email sent successfully!"})        
