@@ -15,8 +15,8 @@ services:
       - media_files:/app/media
     restart: unless-stopped  # More specific restart policy
     # Removing direct port exposure for production
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     networks:
       - dart_backend_network
     # Adding resource limits
@@ -40,9 +40,9 @@ services:
     container_name: metatrader
     volumes:
       - mt5_config:/config
-    expose:
-      - "3000"
-      - "8001"
+    ports:
+      - "3001:3000"
+      - "8001:8001"
     environment:
       - CUSTOM_USER=dart
       - PASSWORD=${MT5_PASSWORD}
@@ -70,4 +70,4 @@ volumes:
 
 networks:
   dart_backend_network:
-    driver: bridge
+    external: true
