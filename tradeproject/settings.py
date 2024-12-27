@@ -141,14 +141,17 @@ DATABASES = {
     }
 }
 
-REDIS_HOST = os.environ.get('REDIS_HOST')
-REDIS_PORT = int(os.environ.get('REDIS_PORT'))
+REDIS_URL = os.environ.get("REDIS_URL")
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(f"{REDIS_URL}/0")],
+        },
+    },
 }
+
 
 
 # Password validation
@@ -298,9 +301,13 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     CORS_ALLOWED_ORIGINS = [
-        "https://your-production-domain.com"
+        "https://dartaitrader.com",
+        "https://dartaitrader.ir"
     ]
-    CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']
+    CSRF_TRUSTED_ORIGINS = [
+        "https://dartaitrader.com",
+        "https://dartaitrader.ir"
+    ]
 
 METATRADER_URL = os.environ.get('METATRADER_URL', "127.0.0.1")
 METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
