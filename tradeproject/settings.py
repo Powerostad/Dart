@@ -301,9 +301,13 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     CORS_ALLOWED_ORIGINS = [
-        "https://your-production-domain.com"
+        "https://dartaitrader.com",
+        "https://dartaitrader.ir"
     ]
-    CSRF_TRUSTED_ORIGINS = ['https://your-production-domain.com']
+    CSRF_TRUSTED_ORIGINS = [
+        "https://dartaitrader.com",
+        "https://dartaitrader.ir"
+    ]
 
 METATRADER_URL = os.environ.get('METATRADER_URL', "127.0.0.1")
 METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
