@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy project
 COPY . /app/
 
-RUN python manage.py set_collation
+#RUN python manage.py set_collation
 RUN python manage.py initiate_plans
 
 CMD ["gunicorn", "tradeproject.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
