@@ -13,8 +13,6 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    networks:
-      - dart_backend_network
     deploy:
       resources:
         limits:
@@ -42,8 +40,6 @@ services:
     environment:
       - CUSTOM_USER=dart
       - PASSWORD=${MT5_PASSWORD}
-    networks:
-      - dart_backend_network
     restart: unless-stopped
     deploy:
       resources:
@@ -63,7 +59,3 @@ volumes:
   static_files:  # Named volume for static files
   media_files:   # Named volume for media files
   mt5_config:    # Named volume for MT5 configuration
-
-networks:
-  dart_backend_network:
-    external: true
