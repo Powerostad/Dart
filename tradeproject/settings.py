@@ -141,14 +141,17 @@ DATABASES = {
     }
 }
 
-REDIS_HOST = os.environ.get('REDIS_HOST')
-REDIS_PORT = int(os.environ.get('REDIS_PORT'))
+REDIS_URL = os.environ.get("REDIS_URL")
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(f"{REDIS_URL}/0")],
+        },
+    },
 }
+
 
 
 # Password validation
