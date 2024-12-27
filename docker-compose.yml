@@ -4,22 +4,17 @@ services:
   web:
     build: 
       context: .
-      # Adding build args for potential environment-specific builds
-      args:
-        - BUILD_ENV=production
-    # Modified command to be more production-friendly
+      dockerfile: Dockerfile
+    env_file: .env
     command: gunicorn "tradeproject.asgi:application" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --worker-tmp-dir /dev/shm --max-requests 1000 --max-requests-jitter 50 --timeout 120
     volumes:
-      # Using named volumes instead of bind mounts for better performance
       - static_files:/app/static
       - media_files:/app/media
-    restart: unless-stopped  # More specific restart policy
-    # Removing direct port exposure for production
+    restart: unless-stopped
     ports:
       - "8000:8000"
     networks:
       - dart_backend_network
-    # Adding resource limits
     deploy:
       resources:
         limits:
@@ -38,6 +33,7 @@ services:
   mt5:
     image: gmag11/metatrader5_vnc
     container_name: metatrader
+    env_file: .env
     volumes:
       - mt5_config:/config
     ports:
