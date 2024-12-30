@@ -261,8 +261,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=2),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
@@ -314,3 +314,6 @@ METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
+
+TRADING_TIMEFRAMES = ['15m', '1h', '4h', 'daily']
+SIGNAL_CONFIDENCE_THRESHOLD = 0.7
