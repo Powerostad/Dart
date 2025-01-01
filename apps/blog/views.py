@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.db.models import Q
 from .models import Blog
-from .serializers import BlogSerializer
+from .serializers import BlogSerializer, BlogDetailSerializer, BlogStatusUpdateSerializer
+from rest_framework.permissions import IsAdminUser
+from rest_framework.generics import ListAPIView
+from rest_framework.filters import BaseFilterBackend
 
 class BlogCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -77,4 +80,44 @@ class UserBlogsView(APIView):
         serializer = BlogSerializer(blogs, many=True)
         return Response(serializer.data)
 
+
+class BlogDetailView(APIView):
+    def get(self, request, pk):
+        try:
+            blog = Blog.objects.get(id=pk)
+            serializer = BlogDetailSerializer(blog)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class ApproveRejectBlogView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, pk):
+        try:
+            blog = Blog.objects.get(pk=pk)
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = BlogStatusUpdateSerializer(blog, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Blog status updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class BlogListAdminView(ListAPIView):
+    queryset = Blog.objects.all()
+    serializer_class = BlogSerializer
+    permission_classes = [IsAdminUser]  # Ensure only admins can access this API
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Get the query parameter for filtering
+        status_filter = self.request.query_params.get('status', None)
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        return queryset
+            
 # Create your views here.
