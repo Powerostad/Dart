@@ -317,3 +317,9 @@ GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
 TRADING_TIMEFRAMES = ['15m', '1h', '4h', 'daily']
 SIGNAL_CONFIDENCE_THRESHOLD = 0.7
+
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "darttradingplatform@gmail.com"
+SMTP_PASSWORD = "yhuw grqx qwcr ikfl"

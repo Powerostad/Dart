@@ -1,8 +1,10 @@
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from decouple import config
 import logging
+from email_validator import validate_email, EmailNotValidError
+from django.conf import settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -18,11 +20,23 @@ class CustomSMTPServer:
         self.username = username
         self.password = password
 
+
+    def validate_email_address(self, email):
+        try:
+            validate_email(email).normalized
+            return True
+        except EmailNotValidError:
+            return False
+
     def send_email(self, to_email, subject, body):
         try:
-            # Set up the server connection
-            with smtplib.SMTP(self.server_host, self.server_port) as server:
-                server.starttls()  # Enable encryption if using port 587
+            email_is_valid = self.validate_email_address(to_email)
+            if not email_is_valid:
+                return {"status": "error", "message": "Email is not Valid"}
+
+            with smtplib.SMTP(self.server_host, self.server_port, timeout=30) as server:
+                server.set_debuglevel(0)
+                server.starttls(context=ssl.create_default_context())
                 if self.username and self.password:
                     server.login(self.username, self.password)
 
@@ -41,11 +55,9 @@ class CustomSMTPServer:
             logger.error(f"Failed to send email: {e}")
             return {"status": "error", "message": str(e)}
 
-
-# Initialize the SMTP server using environment variables
 smtp_server = CustomSMTPServer(
-    config("SMTP_HOST", default="localhost"),
-    config("SMTP_PORT", default=25, cast=int),
-    config("SMTP_USERNAME", default=None),
-    config("SMTP_PASSWORD", default=None),
+    server_host=settings.SMTP_HOST,
+    server_port=settings.SMTP_PORT,
+    username=settings.SMTP_USERNAME,
+    password=settings.SMTP_PASSWORD
 )
