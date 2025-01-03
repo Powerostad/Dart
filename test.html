@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Signal WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #signals {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trading Signal WebSocket Test</h1>
+
+    <div id="status" class="disconnected">Disconnected</div>
+
+    <div class="controls">
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <button onclick="getSymbols()">Get Available Symbols</button>
+    </div>
+
+    <div class="controls">
+        <select id="symbolSelect" multiple>
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="USDJPY">USDJPY</option>
+        </select>
+        <button onclick="subscribe()">Subscribe</button>
+        <button onclick="unsubscribe()">Unsubscribe</button>
+    </div>
+
+    <h3>Messages:</h3>
+    <div id="signals"></div>
+
+    <script>
+        let ws = null;
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM1MzA0NjgwLCJpYXQiOjE3MzUzMDEwODAsImp0aSI6Ijk1NDNmNjA5NzU3OTQ5MDg4YWQ4NjFhZGU3MTRjNGE3IiwidXNlcl9pZCI6Mn0.k8rchjKb_aMs6Paz73_yFLxiLThKB6vCE0_K4774STM'; // Replace with actual token
+
+        function connect() {
+            if (ws) {
+                ws.close();
+            }
+
+            // Create WebSocket connection with token
+            ws = new WebSocket(`ws://localhost:8000/ws/predict/?token=${token}`);
+
+            ws.onopen = function() {
+                document.getElementById('status').className = 'connected';
+                document.getElementById('status').textContent = 'Connected';
+                logMessage('Connected to WebSocket');
+            };
+
+            ws.onclose = function() {
+                document.getElementById('status').className = 'disconnected';
+                document.getElementById('status').textContent = 'Disconnected';
+                logMessage('Disconnected from WebSocket');
+                ws = null;
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                logMessage('Received: ' + JSON.stringify(data, null, 2));
+            };
+
+            ws.onerror = function(error) {
+                logMessage('Error: ' + error.message);
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+
+        function getSymbols() {
+            if (ws) {
+                ws.send(JSON.stringify({
+                    type: 'get_available_symbols'
+                }));
+            }
+        }
+
+        function subscribe() {
+            if (ws) {
+                const select = document.getElementById('symbolSelect');
+                const selectedSymbols = Array.from(select.selectedOptions).map(option => option.value);
+
+                if (selectedSymbols.length > 0) {
+                    ws.send(JSON.stringify({
+                        type: 'subscribe',
+                        symbols: selectedSymbols
+                    }));
+                }
+            }
+        }
+
+        function unsubscribe() {
+            if (ws) {
+                const select = document.getElementById('symbolSelect');
+                const selectedSymbols = Array.from(select.selectedOptions).map(option => option.value);
+
+                if (selectedSymbols.length > 0) {
+                    ws.send(JSON.stringify({
+                        type: 'unsubscribe',
+                        symbols: selectedSymbols
+                    }));
+                }
+            }
+        }
+
+        function logMessage(message) {
+            const signals = document.getElementById('signals');
+            const messageElement = document.createElement('div');
+            messageElement.style.borderBottom = '1px solid #eee';
+            messageElement.style.padding = '5px 0';
+            messageElement.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            signals.insertBefore(messageElement, signals.firstChild);
+        }
+    </script>
+</body>
+</html>

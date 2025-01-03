@@ -19,6 +19,7 @@ class AsyncMT5Controller:
     _connection_pool: Dict[str, 'AsyncMT5Controller'] = {}
 
     def __init__(self, connection_id: str = 'default'):
+        self.active_symbols = None
         self.connection_id = connection_id
         self.host = settings.METATRADER_URL
         self.port = settings.METATRADER_PORT
@@ -26,6 +27,7 @@ class AsyncMT5Controller:
         self._initialized = False
 
         self.timeframe_map = {
+            "5m": MetaTrader5.TIMEFRAME_M5,
             '15m': MetaTrader5.TIMEFRAME_M15,
             '1h': MetaTrader5.TIMEFRAME_H1,
             '4h': MetaTrader5.TIMEFRAME_H4,
@@ -106,8 +108,8 @@ class AsyncMT5Controller:
                 raise
 
     @async_retry(retries=3, delay=1)
-    async def get_mt5_symbols(self):
-        cache_key = f"symbols_{self.connection_id}"
+    async def get_mt5_symbols(self, number_of_top_symbols:int=100):
+        cache_key = f"top_500_symbols"
         cached_data = await self.cache.get(cache_key)
         if cached_data is not None:
             return cached_data
@@ -116,10 +118,21 @@ class AsyncMT5Controller:
             try:
                 symbols = await sync_to_async(self.mt5.symbols_get)()
                 symbol_names = [symbol.name for symbol in symbols]
+                active_symbols = []
+                for symbol in symbol_names:
+                    try:
+                        data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
+                        if data is not None and not data.empty:
+                            avg_volume = data['volume'].mean()
+                            active_symbols.append((symbol, avg_volume))
+                    except Exception as e:
+                        continue
 
-                await self.cache.set(cache_key, symbol_names, ttl=60)
-                print("IN GET_MT5_SYMBOLS: ", symbol_names)
-                return symbol_names
+                active_symbols.sort(key=lambda x: x[1], reverse=True)
+                self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
+
+                await self.cache.set(cache_key, symbol_names, ttl=86400) # 24 Hour
+                return self.active_symbols
             except Exception as e:
                 logger.error(f"Unexpected Error on getting symbols: {str(e)}")
                 raise
