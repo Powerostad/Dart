@@ -3,10 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.db.models import Q
-from .models import Blog
-from .serializers import BlogSerializer, BlogDetailSerializer, BlogStatusUpdateSerializer
+from apps.blog.models import Blog
+from apps.blog.serializers import BlogSerializer, BlogDetailSerializer, BlogStatusUpdateSerializer
 from rest_framework.permissions import IsAdminUser
-from rest_framework.generics import ListAPIView
 from rest_framework.filters import BaseFilterBackend
 
 class BlogCreateView(APIView):
@@ -107,17 +106,18 @@ class ApproveRejectBlogView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class BlogListAdminView(ListAPIView):
-    queryset = Blog.objects.all()
-    serializer_class = BlogSerializer
+class BlogListAdminView(APIView):
     permission_classes = [IsAdminUser]  # Ensure only admins can access this API
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
+    def get(self, request, *args, **kwargs):
         # Get the query parameter for filtering
-        status_filter = self.request.query_params.get('status', None)
+        status_filter = request.query_params.get('status', None)
+        queryset = Blog.objects.all()
         if status_filter:
             queryset = queryset.filter(status=status_filter)
-        return queryset
+        
+        # Serialize the data
+        serializer = BlogSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
             
 # Create your views here.
