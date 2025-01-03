@@ -88,3 +88,10 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionPlan
         fields = '__all__'
+
+
+class EmailRequestSerializer(serializers.Serializer):
+    to_email = serializers.EmailField()
+    subject = serializers.CharField(max_length=255)
+    body = serializers.CharField()
+    

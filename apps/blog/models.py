@@ -8,6 +8,7 @@ class Blog(models.Model):
         ('draft', 'Draft'),
         ('pending', 'Pending Approval'),
         ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
     ]
 
     title = models.CharField(max_length=255)
@@ -17,6 +18,7 @@ class Blog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     likes_count = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to='blog_images/', null=True, blank=True)  # New field
 
     def __str__(self):
         return self.title
