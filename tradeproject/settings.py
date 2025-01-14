@@ -16,6 +16,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 import tradeproject
+from utils.algorithms.algorithms import MHarrisSystematic, NadayaraWatsonFullStrategy15Min, AligatorAlgorithm
+from utils.controllers.signal import SignalGenerationConfig
 
 load_dotenv()
 
@@ -314,6 +316,26 @@ METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
-
-TRADING_TIMEFRAMES = ['15m', '1h', '4h', 'daily']
+TRADING_ALGORITHMS = [
+    MHarrisSystematic,
+    AligatorAlgorithm,
+    NadayaraWatsonFullStrategy15Min
+]
+TRADING_TIMEFRAMES = ['5m', '15m', '1h', '4h', 'daily']
 SIGNAL_CONFIDENCE_THRESHOLD = 0.7
+
+SIGNAL_CONFIG = SignalGenerationConfig(
+    timeframes=TRADING_TIMEFRAMES,
+    algorithm_classes=TRADING_ALGORITHMS,
+    confidence_threshold=SIGNAL_CONFIDENCE_THRESHOLD,
+)
+CELERY_BROKER_URL = "redis://default:Dart1342@91.107.174.28:6379"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'redis://default:Dart1342@91.107.174.28:6379'
+CELERY_TIMEZONE = 'UTC'
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "darttradingplatform@gmail.com"
+SMTP_PASSWORD = "yhuw grqx qwcr ikfl"

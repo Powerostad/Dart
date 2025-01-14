@@ -1,4 +1,5 @@
 import pandas as pd
+from celery.utils.log import get_task_logger
 from utils.data_handler.data_handler import RealTimeDataHandler
 from utils.position_manager.position_manager import PositionManager
 from utils.timeframes import mt5
@@ -23,7 +24,7 @@ class SignalManager:
             max_positions (int): Maximum concurrent positions
             trade_interval (timedelta): Minimum time between trades
         """
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = get_task_logger("tasks")
 
         # Core configuration
         self.symbols = symbols

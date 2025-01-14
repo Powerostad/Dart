@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     BlogCreateView, BlogListView, BlogSearchView,
-    BlogUpdateView, BlogDeleteView, UserBlogsView
+    BlogUpdateView, BlogDeleteView, UserBlogsView,
+    BlogDetailView, ApproveRejectBlogView, BlogListAdminView
 )
 
 app_name='blog'
@@ -13,4 +14,7 @@ urlpatterns = [
     path('<int:pk>/update/', BlogUpdateView.as_view(), name='blog-update'),
     path('<int:pk>/delete/', BlogDeleteView.as_view(), name='blog-delete'),
     path('my-blogs/', UserBlogsView.as_view(), name='user-blogs'),
+    path('blog/<int:pk>/', BlogDetailView.as_view(), name='blog-detail'),  # New API for single blog
+    path('blogs/<int:pk>/status/', ApproveRejectBlogView.as_view(), name='blog-status-update'),
+    path('blogs/admin/list/', BlogListAdminView.as_view(), name='admin-blog-list'),
 ]

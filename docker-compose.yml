@@ -10,17 +10,9 @@ services:
     volumes:
       - static_files:/app/static
       - media_files:/app/media
-    restart: unless-stopped
+    restart: always
     ports:
       - "8000:8000"
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
@@ -28,34 +20,22 @@ services:
       retries: 3
       start_period: 40s
 
-  mt5:
-    image: gmag11/metatrader5_vnc
-    container_name: metatrader
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
     env_file: .env
-    volumes:
-      - mt5_config:/config
-    ports:
-      - "3001:3000"
-      - "8001:8001"
-    environment:
-      - CUSTOM_USER=dart
-      - PASSWORD=${MT5_PASSWORD}
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 4G
-        reservations:
-          cpus: '1'
-          memory: 2G
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: celery -A tradeproject.celery_conf worker -l INFO
+    restart: always
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    command: celery -A tradeproject.celery_conf beat -l INFO
+    restart: always
 
 volumes:
   static_files:  # Named volume for static files
   media_files:   # Named volume for media files
-  mt5_config:    # Named volume for MT5 configuration

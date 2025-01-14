@@ -6,9 +6,9 @@ import pandas as pd
 
 
 class SignalType(Enum):
-    BUY = auto()
-    SELL = auto()
-    NEUTRAL = auto()
+    BUY = "BUY"
+    SELL = "SELL"
+    NEUTRAL = "NEUTRAL"
 
 
 @dataclass
