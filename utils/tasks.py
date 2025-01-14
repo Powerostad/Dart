@@ -2,8 +2,7 @@ from asgiref.sync import async_to_sync
 from celery import shared_task
 import asyncio
 from typing import List, Dict
-
-from tradeproject import celery_app
+from celery.utils.log import get_task_logger
 from utils.controllers.metatrader import AsyncMT5Controller
 from utils.controllers.signal import SignalController, SignalGenerationConfig
 from apps.forex.models import Signal
@@ -16,6 +15,8 @@ try:
 except RuntimeError:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+logger = get_task_logger("tasks")
 
 mt5_controller = async_to_sync(AsyncMT5Controller.get_instance)()
 controller = loop.run_until_complete(SignalController.create(settings.SIGNAL_CONFIG))
@@ -82,7 +83,7 @@ def generate_trading_signals(self) -> Dict[str, List[TradingSignal]]:
 def store_trading_signal(symbol: str, timeframe: str, signal_type: str,
                          confidence: float, algorithms: List[str]) -> None:
     """Store trading signal in database"""
-
+    logger.info("Storing trading signal in database")
     Signal.objects.create(
         symbol=symbol,
         timeframe=timeframe,
@@ -90,14 +91,48 @@ def store_trading_signal(symbol: str, timeframe: str, signal_type: str,
         confidence=confidence,
         algorithms_triggered=algorithms
     )
+    logger.info(f"Signal with symbol: {symbol} and timeframe: {timeframe} and signal type: {signal_type} has been stored")
 
+# async def active_symbols(number_of_top_symbols=10):
+#     cache_key = f"top_{number_of_top_symbols}_symbols"
+#     cached_data = await self.cache.get(cache_key)
+#     if cached_data is not None:
+#         return cached_data
+#     logger.info("before mt5 connection")
+#     async with self.connection():
+#         try:
+#             logger.info("inside mt5 connection")
+#             symbols = await sync_to_async(self.mt5.symbols_get)()
+#             logger.info(f"got symbols: {symbols}")
+#             symbol_names = [symbol.name for symbol in symbols]
+#             active_symbols = []
+#             for symbol in symbol_names:
+#                 try:
+#                     data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
+#                     logger.info(f"got historical data of {symbol}")
+#                     if data is not None and not data.empty:
+#                         avg_volume = data['volume'].mean()
+#                         logger.info(f"avg_volume of {symbol}: {avg_volume}")
+#                         active_symbols.append((symbol, avg_volume))
+#                 except Exception as e:
+#                     logger.error(f"error on getting data: {str(e)}")
+#                     continue
+#
+#             active_symbols.sort(key=lambda x: x[1], reverse=True)
+#             self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
+#
+#             await self.cache.set(cache_key, symbol_names, ttl=86400)  # 24 Hour
+#             logger.info(f"{self.active_symbols}")
+#             return self.active_symbols
 
 @shared_task(max_retries=3)
 def five_minute_signal():
     async def task_logic():
-        symbols = await mt5_controller.get_mt5_symbols()
+        symbols = await mt5_controller.get_mt5_symbols(number_of_top_symbols=10)
+        logger.info(f"all the symbols: {symbols}, len symbols: {len(symbols)}")
         for symbol in symbols:
             signal = await controller.generate_signals_for_symbol(symbol=symbol, timeframe="5m")
+            logger.info(f"Symbol: {symbol}, Signal: {signal}")
             if signal is not None:
                 store_trading_signal.delay(
                     symbol=signal.symbol,
@@ -106,7 +141,6 @@ def five_minute_signal():
                     confidence=signal.confidence,
                     algorithms=signal.algorithms_triggered
                 )
-                return signal.signal_type.value
 
     # Run the async function
-    asyncio.run(task_logic())
+    async_to_sync(task_logic)()

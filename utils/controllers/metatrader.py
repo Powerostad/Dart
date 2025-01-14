@@ -8,9 +8,9 @@ from asgiref.sync import sync_to_async
 from mt5linux import MetaTrader5
 from django.conf import settings
 from utils.utils import async_retry
-from logging import getLogger
+from celery.utils.log import get_task_logger
 
-logger = getLogger(__name__)
+logger = get_task_logger("tasks")
 
 
 class AsyncMT5Controller:
@@ -86,7 +86,7 @@ class AsyncMT5Controller:
 
         async with self.connection():
             try:
-                rates = await sync_to_async(self.mt5.copy_rates_from_pos)(
+                rates = self.mt5.copy_rates_from_pos(
                     symbol,
                     self.timeframe_map.get(timeframe, self.mt5.TIMEFRAME_M15),
                     0,
@@ -99,33 +99,32 @@ class AsyncMT5Controller:
                 df = pd.DataFrame(rates)
                 df['time'] = pd.to_datetime(df['time'], unit='s')
                 df.set_index('time', inplace=True)
-
                 await self.cache.set(cache_key, df.to_dict("records"), ttl=60)
-
                 return df
             except Exception as e:
                 logger.error(f"Unexpected Error on getting historical data candles: {str(e)}")
-                raise
+                pass
 
     @async_retry(retries=3, delay=1)
     async def get_mt5_symbols(self, number_of_top_symbols:int=100):
-        cache_key = f"top_500_symbols"
+        cache_key = f"top_{number_of_top_symbols}_symbols"
         cached_data = await self.cache.get(cache_key)
         if cached_data is not None:
             return cached_data
-
         async with self.connection():
             try:
-                symbols = await sync_to_async(self.mt5.symbols_get)()
+                symbols = self.mt5.symbols_get(group="*USD*")
                 symbol_names = [symbol.name for symbol in symbols]
                 active_symbols = []
                 for symbol in symbol_names:
                     try:
                         data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
                         if data is not None and not data.empty:
-                            avg_volume = data['volume'].mean()
+                            avg_volume = data['tick_volume'].mean()
                             active_symbols.append((symbol, avg_volume))
                     except Exception as e:
+                        # raise e
+                        logger.error(f"error on getting data: {str(e)}")
                         continue
 
                 active_symbols.sort(key=lambda x: x[1], reverse=True)

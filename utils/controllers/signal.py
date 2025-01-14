@@ -6,7 +6,7 @@ from celery.utils.log import get_task_logger
 from utils.algorithms.base import TradingAlgorithm, TradingSignal, SignalType
 from utils.controllers.metatrader import AsyncMT5Controller
 
-logger = get_task_logger(__name__)
+logger = get_task_logger("tasks")
 
 @dataclass
 class SignalGenerationConfig:
@@ -43,17 +43,18 @@ class SignalController:
             for algo in self.algorithms:
                 try:
                     signal = algo.generate_signal(data)
-                    print("SIGNAL IS: ", signal)
-                    if signal != SignalType.NEUTRAL:
-                        algorithm_signals.append({
-                            'name': algo.name,
-                            'signal': signal
-                        })
+                    logger.info(f"SIGNAL IS: {signal}")
+                    # if signal != SignalType.NEUTRAL:
+                    algorithm_signals.append({
+                        'name': algo.name,
+                        'signal': signal
+                    })
                 except Exception as e:
                     logger.error(f"Algorithm {algo.name} failed: {str(e)}")
                     continue
 
             if not algorithm_signals:
+                logger.info(f"No signals for symbol {symbol} IN timeframe {timeframe}")
                 return None
 
             # Calculate confidence based on algorithm agreement
@@ -64,13 +65,17 @@ class SignalController:
             if buy_count > sell_count:
                 confidence = buy_count / len(self.algorithms)
                 signal_type = SignalType.BUY
-            else:
+            elif buy_count < sell_count:
                 confidence = sell_count / len(self.algorithms)
                 signal_type = SignalType.SELL
+            else:
+                confidence = float(0)
+                signal_type = SignalType.NEUTRAL
 
             # Only generate signal if confidence threshold is met
-            if confidence < self.config.confidence_threshold:
-                return None
+            # if confidence < self.config.confidence_threshold:
+            #     logger.info(f"Confidence threshold not reached. confidence = {confidence}")
+            #     return None
 
             return TradingSignal(
                 symbol=symbol,
@@ -79,7 +84,6 @@ class SignalController:
                 confidence=confidence,
                 algorithms_triggered=[s['name'] for s in algorithm_signals]
             )
-
         except Exception as e:
             logger.error(f"Error generating signals for {symbol} {timeframe}: {str(e)}")
             return None
