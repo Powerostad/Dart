@@ -2,6 +2,7 @@ import os
 
 from celery import Celery
 from celery.signals import worker_ready, worker_shutdown
+from celery.schedules import crontab
 from django.conf import settings
 import asyncio
 from utils.controllers.metatrader import AsyncMT5Controller
@@ -14,7 +15,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.beat_schedule = {
     'schedule-5-minute': {
         'task': 'utils.tasks.five_minute_signal',
-        'schedule': 300.0,
+        'schedule': crontab(minute='*/5'),
     }
 }
 
