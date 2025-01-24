@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   web:
-    build:
+    build: 
       context: .
       dockerfile: Dockerfile
     env_file: .env
@@ -12,21 +10,15 @@ services:
       - media_files:/app/media
     restart: always
     networks:
-      - traefik
+      - dokploy_network
+    ports:
+      - 8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.tradeproject-router.rule=Host(`api.dartaitrader.com`)
       - traefik.http.routers.tradeproject-router.entrypoints=web,websecure
-      - traefik.http.routers.tradeproject-router.tls=true
+      - traefik.http.routers.next-app.tls.certResolver=letsencrypt
       - traefik.http.services.tradeproject-service.loadbalancer.server.port=8000
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-      - traefik.http.routers.tradeproject-router.middlewares=redirect-to-https
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   celery:
     build:
@@ -35,6 +27,8 @@ services:
     env_file: .env
     command: celery -A tradeproject.celery_conf worker -l INFO
     restart: always
+    networks:
+      - dokploy-network
 
   celery-beat:
     build:
@@ -43,11 +37,13 @@ services:
     env_file: .env
     command: celery -A tradeproject.celery_conf beat -l INFO
     restart: always
+    networks:
+      - dokploy-network
 
 volumes:
   static_files:
   media_files:
 
 networks:
-  traefik:
+  dokploy-network:
     external: true
