@@ -84,6 +84,7 @@ def store_trading_signal(symbol: str, timeframe: str, signal_type: str,
                          confidence: float, algorithms: List[str]) -> None:
     """Store trading signal in database"""
     logger.info("Storing trading signal in database")
+    print(symbol, timeframe, signal_type, confidence, algorithms)
     Signal.objects.create(
         symbol=symbol,
         timeframe=timeframe,
