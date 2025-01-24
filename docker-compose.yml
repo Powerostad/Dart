@@ -1,8 +1,8 @@
-version: '3.8'  # Explicitly declaring version for better compatibility
+version: '3.8'
 
 services:
   web:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     env_file: .env
@@ -11,8 +11,16 @@ services:
       - static_files:/app/static
       - media_files:/app/media
     restart: always
-    ports:
-      - "8000:8000"
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tradeproject-router.rule=Host(`api.dartaitrader.com`)
+      - traefik.http.routers.tradeproject-router.entrypoints=web,websecure
+      - traefik.http.routers.tradeproject-router.tls=true
+      - traefik.http.services.tradeproject-service.loadbalancer.server.port=8000
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.tradeproject-router.middlewares=redirect-to-https
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
@@ -37,5 +45,9 @@ services:
     restart: always
 
 volumes:
-  static_files:  # Named volume for static files
-  media_files:   # Named volume for media files
+  static_files:
+  media_files:
+
+networks:
+  traefik:
+    external: true
