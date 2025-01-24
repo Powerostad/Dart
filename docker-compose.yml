@@ -10,7 +10,7 @@ services:
       - media_files:/app/media
     restart: always
     networks:
-      - dokploy_network
+      - dokploy-network
     ports:
       - 8000
     labels:
