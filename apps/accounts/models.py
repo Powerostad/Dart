@@ -144,4 +144,5 @@ class SubscriptionPlan(models.Model):
         verbose_name = "Subscription Plan"
         verbose_name_plural = "Subscription Plans"
         db_table = "subscription_plans"
+        unique_together = ("name", "price", "billing_interval")
 
