@@ -13,12 +13,6 @@ services:
       - dokploy-network
     ports:
       - 8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.tradeproject-router.rule=Host(`api.dartaitrader.com`)
-      - traefik.http.routers.tradeproject-router.entrypoints=web,websecure
-      - traefik.http.routers.next-app.tls.certResolver=letsencrypt
-      - traefik.http.services.tradeproject-service.loadbalancer.server.port=8000
 
   celery:
     build:
