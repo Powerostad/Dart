@@ -1,13 +1,12 @@
 from asgiref.sync import async_to_sync
 from celery import shared_task
 import asyncio
-from typing import List, Dict
+from typing import List
 from celery.utils.log import get_task_logger
 from utils.controllers.metatrader import AsyncMT5Controller
-from utils.controllers.signal import SignalController, SignalGenerationConfig
-from apps.forex.models import Signal
-from utils.algorithms.algorithms import MHarrisSystematic, AligatorAlgorithm, NadayaraWatsonFullStrategy15Min
-from utils.algorithms.base import TradingSignal
+from utils.controllers.signal import SignalController
+from apps.forex.models import Signal, SignalStatus
+from utils.algorithms.base import SignalType
 from django.conf import settings
 
 try:
@@ -18,130 +17,89 @@ except RuntimeError:
 
 logger = get_task_logger("tasks")
 
-mt5_controller = async_to_sync(AsyncMT5Controller.get_instance)()
-controller = loop.run_until_complete(SignalController.create(settings.SIGNAL_CONFIG))
-
-
-@shared_task(bind=True, max_retries=3)
-def generate_trading_signals(self) -> Dict[str, List[TradingSignal]]:
-    """Celery task to generate trading signals"""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    try:
-        all_symbols = async_to_sync(mt5_controller.get_mt5_symbols)()
-        active_symbols = []
-        for symbol in all_symbols:
-            try:
-                # Get recent volume data
-                data = async_to_sync(mt5_controller.get_historical_data_candles)(
-                    symbol,
-                    timeframe='15m',
-                    lookback=10
-                )
-                if data is not None and not data.empty:
-                    avg_volume = data['volume'].mean()
-                    active_symbols.append((symbol, avg_volume))
-            except Exception as e:
-                continue
-
-        active_symbols.sort(key=lambda x: x[1], reverse=True)
-        active_symbols = [symbol for symbol, _ in active_symbols]
-
-        # Create configuration
-        config = SignalGenerationConfig(
-            symbols=active_symbols[:100],
-            timeframes=settings.TRADING_TIMEFRAMES,
-            algorithm_classes=[MHarrisSystematic, AligatorAlgorithm, NadayaraWatsonFullStrategy15Min],
-            confidence_threshold=settings.SIGNAL_CONFIDENCE_THRESHOLD,
-        )
-
-        # Create controller and generate signals
-        signals = loop.run_until_complete(controller.generate_multi_timeframe_signals())
-
-        # Process and store signals
-        for symbol, symbol_signals in signals.items():
-            for signal in symbol_signals:
-                store_trading_signal.delay(
-                    symbol=signal.symbol,
-                    timeframe=signal.timeframe,
-                    signal_type=signal.signal_type.value,
-                    confidence=signal.confidence,
-                    algorithms=signal.algorithms_triggered
-                )
-
-        return signals
-
-    except Exception as exc:
-        self.retry(exc=exc, countdown=60)
+mt5_controller: AsyncMT5Controller = async_to_sync(AsyncMT5Controller.get_instance)()
+controller: SignalController = loop.run_until_complete(SignalController.create(settings.SIGNAL_CONFIG))
 
 
 @shared_task
-def store_trading_signal(symbol: str, timeframe: str, signal_type: str,
-                         confidence: float, algorithms: List[str]) -> None:
-    """Store trading signal in database"""
-    logger.info("Storing trading signal in database")
-    print(symbol, timeframe, signal_type, confidence, algorithms)
-    Signal.objects.create(
+def store_trading_signal(
+        symbol: str,
+        timeframe: str,
+        signal_type: str,
+        confidence: float,
+        algorithms: List[str],
+        current_price: float
+) -> None:
+    """
+    Store trading signal in database with enhanced parameters
+    """
+    logger.info("Storing advanced trading signal in database")
+
+    signal_direction = SignalType(signal_type)
+
+    signal = Signal.create_signal(
         symbol=symbol,
         timeframe=timeframe,
-        signal_type=signal_type,
+        signal_type=signal_direction,
         confidence=confidence,
-        algorithms_triggered=algorithms
+        algorithms=algorithms,
+        current_price=current_price
     )
-    logger.info(f"Signal with symbol: {symbol} and timeframe: {timeframe} and signal type: {signal_type} has been stored")
 
-# async def active_symbols(number_of_top_symbols=10):
-#     cache_key = f"top_{number_of_top_symbols}_symbols"
-#     cached_data = await self.cache.get(cache_key)
-#     if cached_data is not None:
-#         return cached_data
-#     logger.info("before mt5 connection")
-#     async with self.connection():
-#         try:
-#             logger.info("inside mt5 connection")
-#             symbols = await sync_to_async(self.mt5.symbols_get)()
-#             logger.info(f"got symbols: {symbols}")
-#             symbol_names = [symbol.name for symbol in symbols]
-#             active_symbols = []
-#             for symbol in symbol_names:
-#                 try:
-#                     data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
-#                     logger.info(f"got historical data of {symbol}")
-#                     if data is not None and not data.empty:
-#                         avg_volume = data['volume'].mean()
-#                         logger.info(f"avg_volume of {symbol}: {avg_volume}")
-#                         active_symbols.append((symbol, avg_volume))
-#                 except Exception as e:
-#                     logger.error(f"error on getting data: {str(e)}")
-#                     continue
-#
-#             active_symbols.sort(key=lambda x: x[1], reverse=True)
-#             self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
-#
-#             await self.cache.set(cache_key, symbol_names, ttl=86400)  # 24 Hour
-#             logger.info(f"{self.active_symbols}")
-#             return self.active_symbols
+    logger.info(f"Advanced Signal created for {symbol} with status: {signal.status}")
+
 
 @shared_task(max_retries=3)
 def five_minute_signal():
+    """
+    Generate and store 5-minute trading signals
+    """
+
     async def task_logic():
+        # Fetch symbols and generate signals
         symbols = await mt5_controller.get_mt5_symbols(number_of_top_symbols=10)
-        logger.info(f"all the symbols: {symbols}, len symbols: {len(symbols)}")
+        logger.info(f"Processing symbols: {symbols}")
+
         for symbol in symbols:
-            signal = await controller.generate_signals_for_symbol(symbol=symbol, timeframe="5m")
-            logger.info(f"Symbol: {symbol}, Signal: {signal}")
-            if signal is not None:
-                store_trading_signal.delay(
-                    symbol=signal.symbol,
-                    timeframe=signal.timeframe,
-                    signal_type=signal.signal_type.value,
-                    confidence=signal.confidence,
-                    algorithms=signal.algorithms_triggered
+            try:
+                current_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                signal = await controller.generate_signals_for_symbol(
+                    symbol=symbol,
+                    timeframe="5m"
                 )
+                if signal is not None:
+                    store_trading_signal.delay(
+                        symbol=signal.symbol,
+                        timeframe=signal.timeframe,
+                        signal_type=signal.signal_type.value,
+                        confidence=signal.confidence,
+                        algorithms=signal.algorithms_triggered,
+                        current_price=current_price
+                    )
+            except Exception as e:
+                logger.error(f"Error processing {symbol}: {str(e)}")
 
     # Run the async function
     async_to_sync(task_logic)()
+
+
+@shared_task
+def update_signal_statuses():
+    """
+    Periodic task to update signal statuses
+    """
+    # Get all active/pending signals
+    active_signals = Signal.objects.filter(
+        status__in=[
+            SignalStatus.PENDING.name,
+            SignalStatus.ACTIVE.name
+        ]
+    )
+
+    for signal in active_signals:
+        try:
+            current_price = mt5_controller.get_current_price(signal.symbol)
+            signal.update_signal_status(current_price)
+        except Exception as e:
+            logger.error(f"Error updating signal {signal.id}: {str(e)}")
+    Signal.cleanup_expired_signals()
