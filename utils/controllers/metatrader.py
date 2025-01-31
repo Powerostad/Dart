@@ -136,6 +136,57 @@ class AsyncMT5Controller:
                 logger.error(f"Unexpected Error on getting symbols: {str(e)}")
                 raise
 
+    @async_retry(retries=3, delay=1)
+    async def get_current_price(self, symbol: str, price_type: str = "ask") -> float:
+        """
+            Retrieve the current market price for a given symbol.
+
+            Args:
+                symbol (str): The trading symbol to fetch the current price for.
+                price_type (str, optional): The type of price to retrieve.
+                    Defaults to 'ask'. Options include:
+                    - 'ask': Current ask (lowest seller's price)
+                    - 'bid': Current bid (highest buyer's price)
+                    - 'last': Last traded price
+
+            Returns:
+                float: Current market price for the specified symbol.
+
+            Raises:
+                ValueError: If an invalid price type is specified.
+                Exception: If there are issues retrieving the price from MT5.
+            """
+        valid_price_types = ["ask", "bid", "last"]
+        if price_type not in valid_price_types:
+            raise ValueError(f"Invalid price type: {price_type}")
+
+        cache_key = f"current_price_{symbol}_{price_type}"
+        cache = await self.cache.get(cache_key)
+        if cache is not None:
+            return cache
+
+        async with self.connection():
+            try:
+                symbol_info = self.mt5.symbol_info(symbol)
+                if not symbol_info:
+                    raise ValueError(f"Symbol {symbol} not found on MT5")
+                if price_type == "ask":
+                    current_price = symbol_info.ask
+                elif price_type == "bid":
+                    current_price = symbol_info.bid
+                else:
+                    current_price = symbol_info.last
+
+                if current_price is None or current_price <= 0:
+                    raise ValueError(f"Invalid price for {symbol}")
+
+                await self.cache.set(cache_key, current_price, ttl=60)
+                return current_price
+            except Exception as e:
+                logger.error(f"Unexpected Error on getting current price for symbol {symbol}: {str(e)}")
+                raise
+
+
 
     @classmethod
     async def cleanup_connections(cls) -> None:
