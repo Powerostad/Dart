@@ -18,6 +18,7 @@ urlpatterns = [
         path('dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
         path('accounts/', include('apps.accounts.urls', namespace='accounts')),
         path('chatbot/', include('apps.chatbot.urls', namespace='chatbot')),
+        path('forex/', include('apps.forex.urls', namespace='forex')),
 
         path('docs/', TemplateView.as_view(template_name="index.html"), name="swagger-ui"),
 

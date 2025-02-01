@@ -422,6 +422,27 @@ paths:
                   detail:
                     type: string
                     example: "Internal server error"
+  /api/forex/signals/:
+    get:
+      tags:
+        - Forex
+      operationId: forex_signals
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: symbol
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully refreshed token.
 
 components:
   schemas:
