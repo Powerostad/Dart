@@ -440,6 +440,16 @@ paths:
           required: false
           schema:
             type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         '200':
           description: Successfully refreshed token.
