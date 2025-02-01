@@ -4,7 +4,7 @@ import asyncio
 from typing import List
 from celery.utils.log import get_task_logger
 from utils.controllers.metatrader import AsyncMT5Controller
-from utils.controllers.signal import SignalController
+from utils.controllers.signal import SignalController, SignalGenerationConfig
 from apps.forex.models import Signal, SignalStatus
 from utils.algorithms.base import SignalType
 from django.conf import settings
@@ -17,8 +17,14 @@ except RuntimeError:
 
 logger = get_task_logger("tasks")
 
+SIGNAL_CONFIG = SignalGenerationConfig(
+    timeframes=settings.TRADING_TIMEFRAMES,
+    algorithm_classes=settings.TRADING_ALGORITHMS,
+    confidence_threshold=settings.SIGNAL_CONFIDENCE_THRESHOLD,
+)
+
 mt5_controller: AsyncMT5Controller = async_to_sync(AsyncMT5Controller.get_instance)()
-controller: SignalController = loop.run_until_complete(SignalController.create(settings.SIGNAL_CONFIG))
+controller: SignalController = loop.run_until_complete(SignalController.create(SIGNAL_CONFIG))
 
 
 @shared_task

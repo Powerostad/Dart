@@ -1,6 +1,7 @@
 import asyncio
 from functools import wraps
 from logging import getLogger
+from rest_framework.pagination import PageNumberPagination
 
 logger = getLogger(__name__)
 
@@ -21,3 +22,9 @@ def async_retry(retries=3, delay=1):
             return last_exception
         return wrapper
     return decorator
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 1000

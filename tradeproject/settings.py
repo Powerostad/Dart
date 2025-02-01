@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 
 import tradeproject
 from utils.algorithms.algorithms import MHarrisSystematic, NadayaraWatsonFullStrategy15Min, AligatorAlgorithm
-from utils.controllers.signal import SignalGenerationConfig
 
 load_dotenv()
 
@@ -324,11 +323,7 @@ TRADING_ALGORITHMS = [
 TRADING_TIMEFRAMES = ['5m', '15m', '1h', '4h', 'daily']
 SIGNAL_CONFIDENCE_THRESHOLD = 0.7
 
-SIGNAL_CONFIG = SignalGenerationConfig(
-    timeframes=TRADING_TIMEFRAMES,
-    algorithm_classes=TRADING_ALGORITHMS,
-    confidence_threshold=SIGNAL_CONFIDENCE_THRESHOLD,
-)
+
 CELERY_BROKER_URL = "redis://default:Dart1342@91.107.174.28:6379"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
