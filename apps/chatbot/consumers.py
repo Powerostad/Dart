@@ -119,12 +119,16 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
 
     async def get_conversation_history(self, conversation: Conversation, limit: int = 10) -> List[Dict[str, str]]:
         logger.debug(f"Retrieving last {limit} messages for conversation ID: {conversation.id}")
-        messages = (await database_sync_to_async(conversation.messages.order_by)('-created_at'))[:limit]
+        messages = await self.fetch_messages(conversation, limit)
 
         history = [{"role": "system", "content": "You are a helpful AI assistant. Provide clear and concise responses."}]
-        history += [{"role": message.role, "content": message.content} for message in reversed(list(messages))]
+        history += [{"role": message.role, "content": message.content} for message in reversed(messages)]
         logger.info(f"Retrieved conversation history for conversation ID: {conversation.id}")
         return history
+
+    @database_sync_to_async
+    def fetch_messages(self, conversation: Conversation, limit: int):
+        return list(conversation.messages.order_by('-created_at')[:limit])
 
     async def stream_ai_response(self, client: AsyncGroq, chat_history: List[Dict[str, str]], new_message: str) -> AsyncGenerator[str, None]:
         logger.debug("Streaming AI response")
