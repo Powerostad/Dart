@@ -96,32 +96,30 @@ class AIChatbotConsumer(AsyncWebsocketConsumer):
                 'message': 'An unexpected error occurred. Please try again.'
             }))
 
-    @database_sync_to_async
-    def get_or_create_conversation(self, conversation_id: str, user: User, user_message: str) -> Conversation:
+    async def get_or_create_conversation(self, conversation_id: str, user: User, user_message: str) -> Conversation:
         logger.debug(f"Retrieving or creating conversation with ID: {conversation_id} for user: {user}")
         if conversation_id:
             try:
-                return Conversation.objects.get(id=conversation_id, user=user)
+                return await Conversation.objects.aget(id=conversation_id, user=user)
             except Conversation.DoesNotExist:
                 logger.info(f"Conversation with ID {conversation_id} not found. Creating a new one.")
 
-        new_conversation = Conversation.objects.create(
+        new_conversation = await Conversation.objects.acreate(
             user=user,
             title=user_message[:20] if len(user_message) > 20 else user_message,
         )
         logger.info(f"Created new conversation with ID: {new_conversation.id}")
         return new_conversation
 
-    @database_sync_to_async
-    def save_message(self, conversation: Conversation, role: str, content: str):
+    async def save_message(self, conversation: Conversation, role: str, content: str):
         logger.debug(f"Saving message for conversation ID: {conversation.id}, role: {role}, content: {content}")
-        ConversationMessage.objects.create(conversation=conversation, role=role, content=content)
+        await ConversationMessage.objects.acreate(conversation=conversation, role=role, content=content)
         logger.info(f"Message saved for conversation ID: {conversation.id}, role: {role}")
 
-    @database_sync_to_async
-    def get_conversation_history(self, conversation: Conversation, limit: int = 10) -> List[Dict[str, str]]:
+
+    async def get_conversation_history(self, conversation: Conversation, limit: int = 10) -> List[Dict[str, str]]:
         logger.debug(f"Retrieving last {limit} messages for conversation ID: {conversation.id}")
-        messages = conversation.messages.order_by('-created_at')[:limit]
+        messages = (await database_sync_to_async(conversation.messages.order_by)('-created_at'))[:limit]
 
         history = [{"role": "system", "content": "You are a helpful AI assistant. Provide clear and concise responses."}]
         history += [{"role": message.role, "content": message.content} for message in reversed(list(messages))]
