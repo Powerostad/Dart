@@ -13,7 +13,7 @@ class SignalGenerationConfig:
     """Configuration for signal generation"""
     timeframes: List[str]
     algorithm_classes: List[Type[TradingAlgorithm]]
-    confidence_threshold: float = 0.7
+    confidence_threshold: float = 0.6
 
 
 class SignalController:
@@ -44,11 +44,11 @@ class SignalController:
                 try:
                     signal = algo.generate_signal(data)
                     logger.info(f"SIGNAL IS: {signal}")
-                    # if signal != SignalType.NEUTRAL:
-                    algorithm_signals.append({
-                        'name': algo.name,
-                        'signal': signal
-                    })
+                    if signal != SignalType.NEUTRAL:
+                        algorithm_signals.append({
+                            'name': algo.name,
+                            'signal': signal
+                        })
                 except Exception as e:
                     logger.error(f"Algorithm {algo.name} failed: {str(e)}")
                     continue
@@ -73,9 +73,9 @@ class SignalController:
                 signal_type = SignalType.NEUTRAL
 
             # Only generate signal if confidence threshold is met
-            # if confidence < self.config.confidence_threshold:
-            #     logger.info(f"Confidence threshold not reached. confidence = {confidence}")
-            #     return None
+            if confidence < self.config.confidence_threshold:
+                logger.info(f"Confidence threshold not reached. confidence = {confidence}")
+                return None
 
             return TradingSignal(
                 symbol=symbol,
@@ -87,35 +87,3 @@ class SignalController:
         except Exception as e:
             logger.error(f"Error generating signals for {symbol} {timeframe}: {str(e)}")
             return None
-
-    async def generate_multi_timeframe_signals(self) -> Dict[str, List[TradingSignal]]:
-        """Generate signals across multiple symbols and timeframes"""
-        all_signals = {}
-
-        try:
-            for symbol in self.config.symbols:
-                symbol_signals = []
-
-                for timeframe in self.config.timeframes:
-                    try:
-                        signals = await self.generate_signals_for_symbol(symbol, timeframe)
-                        symbol_signals.extend(signals)
-                    except Exception as e:
-                        logger.error(f"Error processing {symbol} {timeframe}: {str(e)}")
-                        continue
-
-                if symbol_signals:
-                    all_signals[symbol] = symbol_signals
-
-        except Exception as e:
-            logger.error(f"Error in generate_multi_timeframe_signals: {str(e)}")
-
-        return all_signals
-
-    async def available_symbols(self) -> List[str]:
-        """Get available trading symbols"""
-        try:
-            return await self.market_data_manager.get_mt5_symbols()
-        except Exception as e:
-            logger.error(f"Error getting available symbols: {str(e)}")
-            return []
