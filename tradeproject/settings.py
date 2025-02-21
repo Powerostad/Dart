@@ -139,6 +139,9 @@ DATABASES = {
         'PASSWORD': os.environ.get('MARIADB_PASSWORD'),
         'HOST': os.environ.get('MARIADB_HOST'),
         'PORT': os.environ.get('MARIADB_PORT'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        }
     }
 }
 
