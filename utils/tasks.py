@@ -56,6 +56,40 @@ def store_trading_signal(
 
 
 @shared_task(max_retries=3)
+def one_minute_signal():
+    """
+    Generate and store 1-minute trading signals
+    """
+
+    async def task_logic():
+        # Fetch symbols and generate signals
+        symbols = await mt5_controller.get_mt5_symbols(number_of_top_symbols=10)
+        logger.info(f"Processing symbols: {symbols}")
+
+        for symbol in symbols:
+            try:
+                current_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                signal = await controller.generate_signals_for_symbol(
+                    symbol=symbol,
+                    timeframe="1m"
+                )
+                if signal is not None:
+                    store_trading_signal.delay(
+                        symbol=signal.symbol,
+                        timeframe=signal.timeframe,
+                        signal_type=signal.signal_type.value,
+                        confidence=signal.confidence,
+                        algorithms=signal.algorithms_triggered,
+                        current_price=current_price
+                    )
+            except Exception as e:
+                logger.error(f"Error processing {symbol}: {str(e)}")
+
+    # Run the async function
+    async_to_sync(task_logic)()
+
+
+@shared_task(max_retries=3)
 def five_minute_signal():
     """
     Generate and store 5-minute trading signals
@@ -88,13 +122,11 @@ def five_minute_signal():
     # Run the async function
     async_to_sync(task_logic)()
 
-
 @shared_task
 def update_signal_statuses():
     """
     Periodic task to update signal statuses
     """
-    # Get all active/pending signals
     active_signals = Signal.objects.filter(
         status__in=[
             SignalStatus.PENDING.name,
@@ -102,10 +134,16 @@ def update_signal_statuses():
         ]
     )
 
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     for signal in active_signals:
         try:
-            current_price = mt5_controller.get_current_price(signal.symbol)
+            current_price = loop.run_until_complete(mt5_controller.get_current_price(signal.symbol))
             signal.update_signal_status(current_price)
         except Exception as e:
             logger.error(f"Error updating signal {signal.id}: {str(e)}")
+            continue
+
     Signal.cleanup_expired_signals()
+    loop.close()

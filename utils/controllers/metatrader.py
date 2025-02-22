@@ -27,6 +27,7 @@ class AsyncMT5Controller:
         self._initialized = False
 
         self.timeframe_map = {
+            "1m": MetaTrader5.TIMEFRAME_M1,
             "5m": MetaTrader5.TIMEFRAME_M5,
             '15m': MetaTrader5.TIMEFRAME_M15,
             '1h': MetaTrader5.TIMEFRAME_H1,
@@ -51,7 +52,7 @@ class AsyncMT5Controller:
             return
 
         try:
-            self.mt5 = MetaTrader5(self.host, self.port)
+            self.mt5 = MetaTrader5(self.host, int(self.port))
             success = await sync_to_async(self.mt5.initialize)()
 
             if not success:
@@ -107,30 +108,42 @@ class AsyncMT5Controller:
 
     @async_retry(retries=3, delay=1)
     async def get_mt5_symbols(self, number_of_top_symbols:int=100):
-        cache_key = f"top_{number_of_top_symbols}_symbols"
-        cached_data = await self.cache.get(cache_key)
-        if cached_data is not None:
-            return cached_data
+        # cache_key = f"top_{number_of_top_symbols}_symbols"
+        # cached_data = await self.cache.get(cache_key)
+        # if cached_data is not None:
+        #     return cached_data
         async with self.connection():
             try:
-                symbols = self.mt5.symbols_get(group="*USD*")
+                symbols_wanted = [
+                    "EURUSD", "USDJPY", "GBPUSD", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD",
+                    "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "BNBUSD", "AVAXUSD",
+                    "TSLA", "AAPL", "COIN", "GOOGL", "FB", "AMZN", "NFLX", "PFE",
+                    "US30", "US500", "DE40", "UK100", "JP225", "NAS100",
+                    "XAUUSD", "XAGUSD", "USOIL", "UKOIL", "XPTUSD", "XPDUSD"
+                ]
+
+                # Convert that list to a single comma-separated string
+                symbols_str = ",".join(symbols_wanted)
+
+                symbols = self.mt5.symbols_get(group=symbols_str)
+                logger.info(f"Founded Symbols:\n {symbols}")
                 symbol_names = [symbol.name for symbol in symbols]
-                active_symbols = []
-                for symbol in symbol_names:
-                    try:
-                        data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
-                        if data is not None and not data.empty:
-                            avg_volume = data['tick_volume'].mean()
-                            active_symbols.append((symbol, avg_volume))
-                    except Exception as e:
-                        # raise e
-                        logger.error(f"error on getting data: {str(e)}")
-                        continue
-
-                active_symbols.sort(key=lambda x: x[1], reverse=True)
-                self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
-
-                await self.cache.set(cache_key, symbol_names, ttl=86400) # 24 Hour
+                # active_symbols = []
+                # for symbol in symbol_names:
+                #     try:
+                #         data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
+                #         if data is not None and not data.empty:
+                #             avg_volume = data['tick_volume'].mean()
+                #             active_symbols.append((symbol, avg_volume))
+                #     except Exception as e:
+                #         raise e
+                #         logger.error(f"error on getting data: {str(e)}")
+                #         continue
+                #
+                # active_symbols.sort(key=lambda x: x[1], reverse=True)
+                # self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
+                self.active_symbols = symbol_names
+                # await self.cache.set(cache_key, symbol_names, ttl=86400) # 24 Hour
                 return self.active_symbols
             except Exception as e:
                 logger.error(f"Unexpected Error on getting symbols: {str(e)}")
