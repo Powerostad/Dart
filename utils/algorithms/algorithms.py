@@ -71,41 +71,36 @@ class MHarrisSystematic(TradingAlgorithm):
         super().__init__("MHarris_Strategy")
 
     def generate_signal(self, data: pd.DataFrame) -> SignalType:
-        """
-        Generate signal based on M. Harris Systematic strategy.
-
-        Args:
-            data (pd.DataFrame): Market data
-
-        Returns:
-            SignalType: Buy, Sell, or Neutral signal
-        """
         if len(data) < 5:
             return SignalType.NEUTRAL
 
-        # Ensure data is in the correct format
         data = data.copy()
         data.rename(columns={'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'}, inplace=True)
         data = data[data.High != data.Low]
 
+        if len(data) < 5:
+            return SignalType.NEUTRAL
+
         def calculate_signal(current_pos: int) -> int:
+            # Buy conditions (higher lows)
             c1 = data['Low'].iloc[current_pos - 4] > data['High'].iloc[current_pos]
             c2 = data['High'].iloc[current_pos] > data['Low'].iloc[current_pos - 3]
-            c3 = data['Low'].iloc[current_pos - 3] > data['Low'].iloc[current_pos - 2]
-            c4 = data['Low'].iloc[current_pos - 2] > data['Low'].iloc[current_pos - 1]
+            c3 = data['Low'].iloc[current_pos - 3] < data['Low'].iloc[current_pos - 2]  # Higher low
+            c4 = data['Low'].iloc[current_pos - 2] < data['Low'].iloc[current_pos - 1]  # Higher low
             c5 = data['Close'].iloc[current_pos] > data['High'].iloc[current_pos - 1]
 
             if c1 and c2 and c3 and c4 and c5:
-                return 2
+                return 2  # Buy
 
+            # Sell conditions (lower highs)
             c1 = data['High'].iloc[current_pos - 4] < data['Low'].iloc[current_pos]
             c2 = data['Low'].iloc[current_pos] < data['High'].iloc[current_pos - 3]
-            c3 = data['High'].iloc[current_pos - 3] < data['High'].iloc[current_pos - 2]
-            c4 = data['High'].iloc[current_pos - 2] < data['High'].iloc[current_pos - 1]
+            c3 = data['High'].iloc[current_pos - 3] > data['High'].iloc[current_pos - 2]  # Lower high
+            c4 = data['High'].iloc[current_pos - 2] > data['High'].iloc[current_pos - 1]  # Lower high
             c5 = data['Close'].iloc[current_pos] < data['Low'].iloc[current_pos - 1]
 
             if c1 and c2 and c3 and c4 and c5:
-                return 1
+                return 1  # Sell
 
             return 0
 
@@ -127,63 +122,52 @@ class MHarrisSystematic(TradingAlgorithm):
 
 class NadayaraWatsonFullStrategy15Min(TradingAlgorithm):
     def __init__(self):
-        # Initialization
         super().__init__("Nadayara_Watson_Strategy")
         self.backcandles = 10
         self.bw = 7
 
     def generate_signal(self, data: pd.DataFrame) -> SignalType:
-        """
-        Generate signal based on Nadayara Watson strategy.
-
-        Args:
-            data (pd.DataFrame): Market data
-
-        Returns:
-            SignalType: Buy, Sell, or Neutral signal
-        """
-        if len(data) < self.backcandles:
+        if len(data) < 50:
             return SignalType.NEUTRAL
 
-        # Ensure data is in the correct format
         data = data.copy()
         data.rename(columns={'open': 'Open', 'high': 'High', 'low': 'Low', 'close': 'Close'}, inplace=True)
         data = data[data.High != data.Low]
 
-        # Calculate necessary indicators
+        if len(data) < 50:
+            return SignalType.NEUTRAL
+
         data["EMA_slow"] = ta.ema(data.Close, length=50)
         data["EMA_fast"] = ta.ema(data.Close, length=40)
         data['ATR'] = ta.atr(data.High, data.Low, data.Close, length=7)
 
-        # Envelope Calculation
         for current_candle_index in range(self.backcandles, len(data)):
             middle, upper, lower = self.__compute_envelopes(data, current_candle_index, self.backcandles, self.bw)
             data.at[current_candle_index, 'Middle_Envelope'] = middle
             data.at[current_candle_index, 'Upper_Envelope'] = upper
             data.at[current_candle_index, 'Lower_Envelope'] = lower
 
-        # Bollinger Bands and Signal Calculations
         my_bbands = ta.bbands(data.Close, length=10, std=2)
         data = data.join(my_bbands)
 
-        # EMA Signal
+        # Adjusted to use majority (5/10 periods)
         above = data['EMA_fast'] > data['EMA_slow']
         below = data['EMA_fast'] < data['EMA_slow']
-        above_all = above.rolling(window=self.backcandles).apply(lambda x: x.all(), raw=True).fillna(0).astype(bool)
-        below_all = below.rolling(window=self.backcandles).apply(lambda x: x.all(), raw=True).fillna(0).astype(bool)
+        above_majority = above.rolling(window=self.backcandles).apply(lambda x: x.sum() >= 5, raw=True).fillna(0).astype(bool)
+        below_majority = below.rolling(window=self.backcandles).apply(lambda x: x.sum() >= 5, raw=True).fillna(0).astype(bool)
 
         data['EMASignal'] = 0
-        data.loc[above_all, 'EMASignal'] = 2
-        data.loc[below_all, 'EMASignal'] = 1
+        data.loc[above_majority, 'EMASignal'] = 2  # Uptrend
+        data.loc[below_majority, 'EMASignal'] = 1  # Downtrend
 
-        # Total Signal Calculation
-        condition_sell = (data['EMASignal'] == 2) & (data['Close'] <= data['BBL_10_2.0'])
-        condition_buy = (data['EMASignal'] == 1) & (data['Close'] >= data['BBU_10_2.0'])
+        # Corrected signal conditions
+        condition_buy = (data['EMASignal'] == 2) & (data['Close'] <= data['BBL_10_2.0'])  # Buy dip in uptrend
+        condition_sell = (data['EMASignal'] == 1) & (data['Close'] >= data['BBU_10_2.0'])  # Sell peak in downtrend
+
         data['Total_Signal'] = 0
-        data.loc[condition_sell, 'Total_Signal'] = 1
         data.loc[condition_buy, 'Total_Signal'] = 2
+        data.loc[condition_sell, 'Total_Signal'] = 1
 
-        # Final Signal
         signal = data['Total_Signal'].iloc[-1]
 
         if signal == 2:
@@ -194,25 +178,20 @@ class NadayaraWatsonFullStrategy15Min(TradingAlgorithm):
         return SignalType.NEUTRAL
 
     def __compute_envelopes(self, df, current_candle_index, backcandles, bw=3):
-        # Slice the DataFrame to include only the past candles up to the current candle index
         start_index = max(current_candle_index - backcandles, 0)
-        dfsample = df[start_index:current_candle_index + 1].copy()  # current candle included
+        dfsample = df[start_index:current_candle_index + 1].copy()
         dfsample.reset_index(drop=True, inplace=True)
 
-        # Create the Kernel Regression model
         X = dfsample.index
         model = KernelReg(endog=dfsample['Close'], exog=X, var_type='c', reg_type='lc', bw=[bw])
         fitted_values, _ = model.fit()
 
-        # Calculate residuals and standard deviation of residuals
         residuals = dfsample['Close'] - fitted_values
         std_dev = 2. * np.std(residuals)
 
-        # Calculate the envelopes
         middle = fitted_values[-1]
         upper = middle + std_dev
         lower = middle - std_dev
 
         return middle, upper, lower
-
     

@@ -323,8 +323,8 @@ TRADING_ALGORITHMS = [
     AligatorAlgorithm,
     NadayaraWatsonFullStrategy15Min
 ]
-TRADING_TIMEFRAMES = ['5m', '15m', '1h', '4h', 'daily']
-SIGNAL_CONFIDENCE_THRESHOLD = 0.7
+TRADING_TIMEFRAMES = ["1m", '5m', '15m', '1h', '4h', 'daily']
+SIGNAL_CONFIDENCE_THRESHOLD = 0.6
 
 
 CELERY_BROKER_URL = "redis://default:Dart1342@91.107.174.28:6379"
