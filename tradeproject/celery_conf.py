@@ -13,13 +13,17 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 
 app.conf.beat_schedule = {
+    'schedule-1-minute': {
+        'task': 'utils.tasks.one_minute_signal',
+        'schedule': crontab(minute='*/1'),
+    },
     'schedule-5-minute': {
         'task': 'utils.tasks.five_minute_signal',
         'schedule': crontab(minute='*/5'),
     },
-    'schedule-1-minute': {
-        'task': 'utils.tasks.one_minute_signal',
-        'schedule': crontab(minute='*/1'),
+    'schedule-15-minute': {
+        'task': 'utils.tasks.fifteen_minute_signal',
+        'schedule': crontab(minute='*/15'),
     },
     "set-signal-status": {
         "task": "utils.tasks.update_signal_statuses",
