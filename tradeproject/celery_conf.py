@@ -16,6 +16,14 @@ app.conf.beat_schedule = {
     'schedule-5-minute': {
         'task': 'utils.tasks.five_minute_signal',
         'schedule': crontab(minute='*/5'),
+    },
+    'schedule-1-minute': {
+        'task': 'utils.tasks.one_minute_signal',
+        'schedule': crontab(minute='*/1'),
+    },
+    "set-signal-status": {
+        "task": "utils.tasks.update_signal_statuses",
+        "schedule": crontab(minute='*/1'),
     }
 }
 
