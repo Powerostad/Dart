@@ -15,7 +15,7 @@ except RuntimeError:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-logger = get_task_logger("tasks")
+logger = get_task_logger(__name__)
 
 SIGNAL_CONFIG = SignalGenerationConfig(
     timeframes=settings.TRADING_TIMEFRAMES,

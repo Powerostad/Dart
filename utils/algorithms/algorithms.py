@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 from statsmodels.nonparametric.kernel_regression import KernelReg
 import pandas_ta as ta

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Dict, Type, Optional
+from typing import List, Type, Optional
 
 from celery.utils.log import get_task_logger
 
 from utils.algorithms.base import TradingAlgorithm, TradingSignal, SignalType
 from utils.controllers.metatrader import AsyncMT5Controller
 
-logger = get_task_logger("tasks")
+logger = get_task_logger(__name__)
 
 @dataclass
 class SignalGenerationConfig:
