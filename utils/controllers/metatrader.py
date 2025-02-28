@@ -143,7 +143,6 @@ class AsyncMT5Controller:
                 # active_symbols.sort(key=lambda x: x[1], reverse=True)
                 # self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
                 self.active_symbols = symbol_names
-                # await self.cache.set(cache_key, symbol_names, ttl=86400) # 24 Hour
                 return self.active_symbols
             except Exception as e:
                 logger.error(f"Unexpected Error on getting symbols: {str(e)}")
@@ -173,11 +172,6 @@ class AsyncMT5Controller:
         if price_type not in valid_price_types:
             raise ValueError(f"Invalid price type: {price_type}")
 
-        cache_key = f"current_price_{symbol}_{price_type}"
-        cache = await self.cache.get(cache_key)
-        if cache is not None:
-            return cache
-
         async with self.connection():
             try:
                 symbol_info = self.mt5.symbol_info(symbol)
@@ -193,7 +187,6 @@ class AsyncMT5Controller:
                 if current_price is None or current_price <= 0:
                     raise ValueError(f"Invalid price for {symbol}")
 
-                await self.cache.set(cache_key, current_price, ttl=60)
                 return current_price
             except Exception as e:
                 logger.error(f"Unexpected Error on getting current price for symbol {symbol}: {str(e)}")
