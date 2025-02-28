@@ -2,7 +2,6 @@ import asyncio
 from contextlib import asynccontextmanager
 from typing import Dict, Optional
 
-import aiocache
 import pandas as pd
 from asgiref.sync import sync_to_async
 from mt5linux import MetaTrader5
@@ -10,7 +9,7 @@ from django.conf import settings
 from utils.utils import async_retry
 from celery.utils.log import get_task_logger
 
-logger = get_task_logger("tasks")
+logger = get_task_logger(__name__)
 
 
 class AsyncMT5Controller:
@@ -34,8 +33,6 @@ class AsyncMT5Controller:
             '4h': MetaTrader5.TIMEFRAME_H4,
             'daily': MetaTrader5.TIMEFRAME_D1
         }
-
-        self.cache = aiocache.Cache(aiocache.SimpleMemoryCache)
 
     @classmethod
     async def get_instance(cls, connection_id: str = 'default') -> 'AsyncMT5Controller':
@@ -80,11 +77,6 @@ class AsyncMT5Controller:
 
     @async_retry(retries=3, delay=1)
     async def get_historical_data_candles(self, symbol, timeframe, lookback: int = 300) -> pd.DataFrame:
-        cache_key = f"candles_{symbol}_{timeframe}_{lookback}_{self.connection_id}"
-        cached_data = await self.cache.get(cache_key)
-        if cached_data is not None:
-            return pd.DataFrame(cached_data)
-
         async with self.connection():
             try:
                 rates = self.mt5.copy_rates_from_pos(
@@ -100,7 +92,6 @@ class AsyncMT5Controller:
                 df = pd.DataFrame(rates)
                 df['time'] = pd.to_datetime(df['time'], unit='s')
                 df.set_index('time', inplace=True)
-                await self.cache.set(cache_key, df.to_dict("records"), ttl=60)
                 return df
             except Exception as e:
                 logger.error(f"Unexpected Error on getting historical data candles: {str(e)}")
