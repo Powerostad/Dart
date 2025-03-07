@@ -106,11 +106,10 @@ class AsyncMT5Controller:
         async with self.connection():
             try:
                 symbols_wanted = [
-                    "EURUSD", "USDJPY", "GBPUSD", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD",
-                    "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "BNBUSD", "AVAXUSD",
-                    "TSLA", "AAPL", "COIN", "GOOGL", "FB", "AMZN", "NFLX", "PFE",
-                    "US30", "US500", "DE40", "UK100", "JP225", "NAS100",
-                    "XAUUSD", "XAGUSD", "USOIL", "UKOIL", "XPTUSD", "XPDUSD"
+                    "EURUSD", "USDJPY", "GBPUSD", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD", "AVAXUSD",
+                    "TSLA", "AAPL", "GOOGL", "FB", "AMZN", "NFLX", "PFE", "ABNB",
+                    "US30", "US500", "DE40",
+                    "XAUUSD", "XAGUSD"
                 ]
 
                 # Convert that list to a single comma-separated string
