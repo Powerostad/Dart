@@ -3,11 +3,17 @@ from celery import shared_task
 import asyncio
 from typing import List
 from celery.utils.log import get_task_logger
+from channels.layers import get_channel_layer
+from gevent.hub import signal
+
 from utils.controllers.metatrader import AsyncMT5Controller
 from utils.controllers.signal import SignalController, SignalGenerationConfig
 from apps.forex.models import Signal, SignalStatus
 from utils.algorithms.base import SignalType
 from django.conf import settings
+
+channel_layer = get_channel_layer()
+
 
 try:
     loop = asyncio.get_event_loop()
@@ -74,14 +80,23 @@ def one_minute_signal():
                     timeframe="1m"
                 )
                 if signal is not None:
+                    signal_data = {
+                        "symbol": signal.symbol,
+                        "timeframe": signal.timeframe,
+                        "signal_type": signal.signal_type,
+                        "confidence": signal.confidence,
+                        "current_price": current_price,
+                        "algorithms": signal.algorithms_triggered
+                    }
                     store_trading_signal.delay(
-                        symbol=signal.symbol,
-                        timeframe=signal.timeframe,
-                        signal_type=signal.signal_type.value,
-                        confidence=signal.confidence,
-                        algorithms=signal.algorithms_triggered,
-                        current_price=current_price
+                        **signal_data
                     )
+                    # channel_layer.group_send(
+                    # "signal_notifications",
+                    # {
+                    #     'type': 'signal_notification',
+                    #     'signal': signal_data
+                    # })
             except Exception as e:
                 logger.error(f"Error processing {symbol}: {str(e)}")
 
