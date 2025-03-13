@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
     "phonenumber_field",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -327,13 +328,32 @@ TRADING_TIMEFRAMES = ["1m", '5m', '15m', '1h', '4h', 'daily']
 SIGNAL_CONFIDENCE_THRESHOLD = 0.6
 
 
-CELERY_BROKER_URL = "redis://default:Dart1342@91.107.174.28:6379"
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_BACKEND = 'redis://default:Dart1342@91.107.174.28:6379'
 CELERY_TIMEZONE = 'UTC'
 
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USERNAME = "darttradingplatform@gmail.com"
-SMTP_PASSWORD = "yhuw grqx qwcr ikfl"
+SMTP_HOST = os.environ.get('SMTP_HOST')
+SMTP_PORT = int(os.environ.get('SMTP_PORT'))
+SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
+
+MINIO_HOST = os.environ.get("MINIO_HOST")
+MINIO_ACCESSKEY = os.environ.get("MINIO_ACCESSKEY")
+MINIO_SECRETKEY = os.environ.get("MINIO_SECRETKEY")
+MINIO_IMAGE_PROFILE_BUCKET = os.environ.get("MINIO_IMAGE_PROFILE_BUCKET")
+MINIO_SECURE = os.environ.get("MINIO_SECURE")
+
+# Storage configuration
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_ENDPOINT_URL = MINIO_HOST
+AWS_ACCESS_KEY_ID = MINIO_ACCESSKEY
+AWS_SECRET_ACCESS_KEY = MINIO_SECRETKEY
+AWS_STORAGE_BUCKET_NAME = MINIO_IMAGE_PROFILE_BUCKET
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = False

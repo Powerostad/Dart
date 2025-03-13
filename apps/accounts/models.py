@@ -1,9 +1,13 @@
 
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from phonenumber_field.modelfields import PhoneNumberField
+
+from utils.utils import validate_image_file
+
 
 # from apps.dashboard.models import Stock
 
@@ -43,7 +47,12 @@ class Profile(models.Model):
     last_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    profile_picture_url = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/%Y/%m/', blank=True, null=True,
+                                        validators=[
+                                            FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),
+                                            validate_image_file
+                                        ]
+                                        )
     bio = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -56,6 +65,13 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.user.username}"
+
+    @property
+    def profile_picture_url(self):
+        """Return the full URL to the profile picture or a default if none exists"""
+        if self.profile_picture:
+            return self.profile_picture.url
+        return f"{settings.MINIO_HOST}/{settings.MINIO_IMAGE_PROFILE_BUCKET}/default.jpeg"
 
 
 # class Trade(models.Model):

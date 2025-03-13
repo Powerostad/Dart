@@ -10,7 +10,8 @@ urlpatterns = [
     path("register/", views.UserRegisterView.as_view(), name="register"),
     path("login/", views.UserLoginView.as_view(), name="login"),
     path("logout/", views.UserLogoutView.as_view(), name="logout"),
-    path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('profile/', views.ProfileAPIView.as_view(), name='profile'),
+    path('profile/image/', views.UploadProfilePictureAPIView.as_view(), name='profile_image'),
     path("subscription_plans/", views.SubscriptionPlansView.as_view(), name='subscription_plan'),
 
     path("token/validate/", jwt_views.TokenVerifyView.as_view(), name='token'),
