@@ -422,7 +422,229 @@ paths:
                   detail:
                     type: string
                     example: "Internal server error"
+  api/support/threads/:
+    get:
+      summary: Get all support threads for the authenticated user
+      description: Retrieve a list of all support threads initiated by the authenticated user.
+      responses:
+        '200':
+          description: A list of support threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupportThread'
+      security:
+        - bearerAuth: []
+      tags:
+        - Support
 
+    post:
+      summary: Create a new support thread
+      description: Allows an authenticated user to create a new support thread.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Issue with account login"
+                content:
+                  type: string
+                  example: "I am unable to log into my account due to a password error."
+      responses:
+        '201':
+          description: Support thread created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportThread'
+      security:
+        - bearerAuth: []
+      tags:
+        - Support
+
+  api/support/threads/{thread_id}/messages/:
+    get:
+      summary: Get all messages in a thread
+      description: Allows the thread owner or admin to view all messages in a support thread.
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          description: The ID of the support thread
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of support messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupportMessage'
+      security:
+        - bearerAuth: []
+      tags:
+        - Support
+
+    post:
+      summary: Add a message to a thread
+      description: Allows the thread owner or admin to add a message to the support thread.
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          description: The ID of the support thread
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "Here is additional information about the issue."
+      responses:
+        '201':
+          description: Message added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportMessage'
+      security:
+        - bearerAuth: []
+      tags:
+        - Support
+
+  /api/blogs/{id}/:
+    get:
+      summary: Retrieve a single blog
+      description: |
+        Fetch details of a specific blog post by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the blog
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Blog retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  content:
+                    type: string
+                  author:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [PENDING, APPROVED, REJECTED]
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  image:
+                    type: string
+                    format: url
+        "404":
+          description: Blog not found
+  /api/blogs/{id}/status/:
+    patch:
+      summary: Approve or reject a blog
+      description: |
+        Approve or reject a blog by providing the status in the request body.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the blog
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [APPROVED, REJECTED]
+      responses:
+        "200":
+          description: Blog status updated successfully
+        "403":
+          description: Forbidden. Only admin users can perform this action.
+        "404":
+          description: Blog not found
+
+
+  /api/blog/admin/list/:
+    get:
+      summary: Retrieve all blogs (admin only)
+      description: |
+        List all blogs for admin users, optionally filtered by status.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter blogs by status (e.g., PENDING, APPROVED, REJECTED)
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED]
+      responses:
+        "200":
+          description: Blogs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    content:
+                      type: string
+                    author:
+                      type: integer
+                    status:
+                      type: string
+                      enum: [PENDING, APPROVED, REJECTED]
+                    created_at:
+                      type: string
+                      format: date-time
+                    updated_at:
+                      type: string
+                      format: date-time
+                    image:
+                      type: string
+                      format: url
+        "403":
+          description: Forbidden. Only admin users can perform this action.
+  
+  
 components:
   schemas:
     PatchedProfile:
@@ -717,9 +939,60 @@ components:
           type: integer
           description: The number of likes the blog has received.
           readOnly: true
+    SupportThread:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Issue with account login"
+        user:
+          type: string
+          example: "username"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-12-24T12:34:56Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-12-24T13:45:67Z"
+
+    SupportMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        thread:
+          type: integer
+          example: 1
+        sender:
+          type: string
+          example: "admin"
+        content:
+          type: string
+          example: "Please reset your password and try again."
+        sent_at:
+          type: string
+          format: date-time
+          example: "2024-12-24T14:45:23Z"
+        is_response:
+          type: boolean
+          example: true
+
 
   securitySchemes:
     jwtAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+
+  
+
+  
+
+

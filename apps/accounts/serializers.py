@@ -3,6 +3,9 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from apps.accounts.models import Profile, SubscriptionPlan, CustomUser
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from django.contrib.auth.models import User
+from django.conf import settings
 
 User = get_user_model()
 
@@ -94,4 +97,45 @@ class EmailRequestSerializer(serializers.Serializer):
     to_email = serializers.EmailField()
     subject = serializers.CharField(max_length=255)
     body = serializers.CharField()
+    
+    
+class UserAdminCreationSerializer(serializers.Serializer):
+    api_password = serializers.CharField(write_only=True)
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate_api_password(self, value):
+        if value != settings.API_SECRET:
+            raise AuthenticationFailed("Invalid API password.")
+        return value
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise ValidationError("A user with this username already exists.")
+        return value
+
+    def validate(self, attrs):
+        required_fields = ["username", "email", "password", "api_password"]
+        missing_fields = [field for field in required_fields if not attrs.get(field)]
+        if missing_fields:
+            raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
+        return attrs
+
+    def create(self, validated_data):
+        username = validated_data["username"]
+        email = validated_data["email"]
+        password = validated_data["password"]
+
+        # Create user with admin privileges
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+        )
+        user.is_staff = True
+        user.is_superuser = True
+        user.save()
+
+        return user    
     

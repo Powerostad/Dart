@@ -5,18 +5,21 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import ProfileSerializer, UserDetailSerializer, UserLoginSerializer, UserLogoutSerializer, \
-    SubscriptionPlanSerializer, EmailRequestSerializer
+    SubscriptionPlanSerializer, EmailRequestSerializer, UserAdminCreationSerializer
 from apps.accounts.models import Profile, SubscriptionPlan
 from rest_framework.views import APIView
 import io
 from apps.accounts.serializers import UserRegisterSerializer, UserLoginSerializer
 from utils.custom_smtp_server import smtp_server
+from rest_framework.authentication import BasicAuthentication
+from django.contrib.auth.models import User
+
 
 User = get_user_model()
 
@@ -351,4 +354,22 @@ class EmailTestView(APIView):
         email = request.data.get('email')
         smtp_server = CustomSMTPServer()
         smtp_server.send_email(email, "Test Email", "This is a test email.")
-        return Response({"message": "Email sent successfully!"})        
+        return Response({"message": "Email sent successfully!"}) 
+   
+    
+class CreateUserAdminAPIView(APIView):
+    """
+    API for creating user-admins.
+    Validates request data and ensures `is_staff` and `is_superuser` are set to True.
+    """
+
+    def post(self, request, *args, **kwargs):
+        serializer = UserAdminCreationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {"message": f"User-admin '{user.username}' created successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

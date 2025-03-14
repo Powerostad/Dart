@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'apps.forex',
     "apps.chatbot",
     'apps.blog',
+    'apps.support',
 
     # 3rd party apps
     'rest_framework',
@@ -306,4 +307,6 @@ METATRADER_URL = os.environ.get('METATRADER_URL', "localhost")
 METATRADER_PORT = int(os.environ.get('METATRADER_PORT', 8001))
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
+
+API_SECRET = "JHSAOFILHCSKbkfdkkbcjd"
 

@@ -22,6 +22,8 @@ urlpatterns = [
         path('docs/', TemplateView.as_view(template_name="index.html"), name="swagger-ui"),
 
         path('blog/', include('apps.blog.urls', namespace='blog')),
+        path('support/', include('apps.support.urls')),
+
 
     ])),
     path("", include(static_urlpatterns)),
