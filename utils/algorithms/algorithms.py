@@ -193,4 +193,190 @@ class NadayaraWatsonFullStrategy15Min(TradingAlgorithm):
         lower = middle - std_dev
 
         return middle, upper, lower
-    
+
+
+class SMCTrading(TradingAlgorithm):
+    def __init__(self):
+        super().__init__("SMC_Strategy")
+        self.atr_period = 14
+
+    def generate_signal(self, data: pd.DataFrame) -> SignalType:
+        # Check initial data requirements
+        if len(data) < 20:  # Minimum data for SMC calculations
+            return SignalType.NEUTRAL
+
+        # Prepare dataframe copy with expected column names
+        df = data.copy().rename(columns={
+            'open': 'Open',
+            'high': 'High',
+            'low': 'Low',
+            'close': 'Close'
+        }, errors='ignore')
+
+        # Filter invalid candles
+        df = df[df['High'] != df['Low']]
+        if len(df) < 20:
+            return SignalType.NEUTRAL
+
+        # Calculate features
+        df = self._calculate_basic_features(df)
+        df = self._identify_order_blocks(df)
+        df = self._identify_fair_value_gaps(df)
+        df = self._identify_liquidity_levels(df)
+        df = self._identify_mitigation_points(df)
+        df = self._identify_trade_setups(df)
+
+        # Check last 3 candles for setups
+        recent_data = df.iloc[-3:]
+        for i in reversed(range(len(recent_data))):
+            if recent_data.iloc[i]['buy_setup']:
+                return SignalType.BUY
+            if recent_data.iloc[i]['sell_setup']:
+                return SignalType.SELL
+
+        return SignalType.NEUTRAL
+
+    def _calculate_basic_features(self, df):
+        """Calculate technical features used in SMC analysis"""
+        df = df.copy()
+        df['body_size'] = abs(df['Close'] - df['Open'])
+        df['upper_wick'] = df['High'] - df[['Open', 'Close']].max(axis=1)
+        df['lower_wick'] = df[['Open', 'Close']].min(axis=1) - df['Low']
+        df['bullish'] = df['Close'] > df['Open']
+        df['candle_range'] = df['High'] - df['Low']
+
+        # Calculate True Range and ATR
+        df['tr'] = np.maximum(
+            df['High'] - df['Low'],
+            np.maximum(
+                abs(df['High'] - df['Close'].shift(1)),
+                abs(df['Low'] - df['Close'].shift(1))
+            )
+        )
+        df['atr'] = df['tr'].rolling(self.atr_period).mean()
+        return df
+
+    def _identify_order_blocks(self, df):
+        """Identify bullish/bearish order blocks"""
+        df = df.copy()
+        window_size = 5
+
+        # Initialize columns
+        df['bullish_ob'] = False
+        df['bearish_ob'] = False
+        df['bullish_ob_strength'] = 0.0
+        df['bearish_ob_strength'] = 0.0
+
+        # Identify swing points
+        df['swing_high'] = df['High'].rolling(window_size, center=True).apply(
+            lambda x: x[window_size // 2] == np.max(x), raw=True)
+        df['swing_low'] = df['Low'].rolling(window_size, center=True).apply(
+            lambda x: x[window_size // 2] == np.min(x), raw=True)
+
+        # Find bullish order blocks
+        for i in range(3, len(df) - 3):
+            if (not df.iloc[i]['bullish'] and
+                    df.iloc[i + 1:i + 4]['Close'].max() > df.iloc[i - 2:i + 1]['High'].max()):
+                df.loc[df.index[i], 'bullish_ob'] = True
+                move = df.iloc[i + 1:i + 4]['Close'].max() - df.iloc[i]['Low']
+                df.loc[df.index[i], 'bullish_ob_strength'] = move / df.iloc[i]['atr']
+
+        # Find bearish order blocks
+        for i in range(3, len(df) - 3):
+            if (df.iloc[i]['bullish'] and
+                    df.iloc[i + 1:i + 4]['Close'].min() < df.iloc[i - 2:i + 1]['Low'].min()):
+                df.loc[df.index[i], 'bearish_ob'] = True
+                move = df.iloc[i]['High'] - df.iloc[i + 1:i + 4]['Close'].min()
+                df.loc[df.index[i], 'bearish_ob_strength'] = move / df.iloc[i]['atr']
+
+        return df
+
+    def _identify_fair_value_gaps(self, df):
+        """Identify Fair Value Gaps in price action"""
+        df = df.copy()
+        df['bullish_fvg'] = False
+        df['bearish_fvg'] = False
+
+        for i in range(2, len(df)):
+            # Bullish FVG (current low > previous high)
+            if df.iloc[i]['Low'] > df.iloc[i - 2]['High']:
+                df.loc[df.index[i], 'bullish_fvg'] = True
+
+            # Bearish FVG (current high < previous low)
+            if df.iloc[i]['High'] < df.iloc[i - 2]['Low']:
+                df.loc[df.index[i], 'bearish_fvg'] = True
+
+        return df
+
+    def _identify_liquidity_levels(self, df):
+        """Identify key liquidity zones"""
+        df = df.copy()
+        window = 5
+        df['buy_liquidity'] = False
+        df['sell_liquidity'] = False
+
+        # Swing lows (buy liquidity)
+        for i in range(window, len(df) - window):
+            if all(df.iloc[i]['Low'] < df.iloc[i - window:i]['Low']) and \
+                    all(df.iloc[i]['Low'] < df.iloc[i + 1:i + window + 1]['Low']):
+                df.loc[df.index[i], 'buy_liquidity'] = True
+
+        # Swing highs (sell liquidity)
+        for i in range(window, len(df) - window):
+            if all(df.iloc[i]['High'] > df.iloc[i - window:i]['High']) and \
+                    all(df.iloc[i]['High'] > df.iloc[i + 1:i + window + 1]['High']):
+                df.loc[df.index[i], 'sell_liquidity'] = True
+
+        return df
+
+    def _identify_mitigation_points(self, df):
+        """Identify price mitigation points"""
+        df = df.copy()
+        df['high_mitigation'] = False
+        df['low_mitigation'] = False
+
+        for i in range(5, len(df)):
+            # High mitigation
+            recent_high = df.iloc[i - 5:i]['High'].max()
+            if df.iloc[i]['High'] >= recent_high and df.iloc[i - 1]['High'] < recent_high:
+                df.loc[df.index[i], 'high_mitigation'] = True
+
+            # Low mitigation
+            recent_low = df.iloc[i - 5:i]['Low'].min()
+            if df.iloc[i]['Low'] <= recent_low and df.iloc[i - 1]['Low'] > recent_low:
+                df.loc[df.index[i], 'low_mitigation'] = True
+
+        return df
+
+    def _identify_trade_setups(self, df):
+        """Identify complete SMC trade setups"""
+        df = df.copy()
+        df['buy_setup'] = False
+        df['sell_setup'] = False
+
+        for i in range(5, len(df)):
+            # Bullish setup criteria
+            bull_cond = (
+                    (df.iloc[i - 5:i]['bullish_ob'].any() |
+                     df.iloc[i - 5:i]['bullish_fvg'].any()) and
+                    df.iloc[i - 3:i]['buy_liquidity'].any() and
+                    (df.iloc[i]['lower_wick'] > 1.5 * df.iloc[i]['body_size']) and
+                    df.iloc[i]['bullish']
+            )
+
+            if bull_cond:
+                df.loc[df.index[i], 'buy_setup'] = True
+
+            # Bearish setup criteria
+            bear_cond = (
+                    (df.iloc[i - 5:i]['bearish_ob'].any() |
+                     df.iloc[i - 5:i]['bearish_fvg'].any()) and
+                    df.iloc[i - 3:i]['sell_liquidity'].any() and
+                    (df.iloc[i]['upper_wick'] > 1.5 * df.iloc[i]['body_size']) and
+                    not df.iloc[i]['bullish']
+            )
+
+            if bear_cond:
+                df.loc[df.index[i], 'sell_setup'] = True
+
+        return df
