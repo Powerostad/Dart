@@ -69,12 +69,12 @@ def one_minute_signal():
 
     async def task_logic():
         # Fetch symbols and generate signals
-        symbols = await mt5_controller.get_mt5_symbols(number_of_top_symbols=10)
-        logger.info(f"Processing symbols: {symbols}")
+        symbols = await mt5_controller.get_mt5_symbols()
 
         for symbol in symbols:
             try:
-                current_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                current_ask_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                current_bid_price = await mt5_controller.get_current_price(symbol, price_type="bid")
                 signal = await controller.generate_signals_for_symbol(
                     symbol=symbol,
                     timeframe="1m"
@@ -85,7 +85,7 @@ def one_minute_signal():
                         "timeframe": signal.timeframe,
                         "signal_type": signal.signal_type,
                         "confidence": signal.confidence,
-                        "current_price": current_price,
+                        "current_price": current_ask_price if signal.signal_type == SignalType.BUY else current_bid_price,
                         "algorithms": signal.algorithms_triggered
                     }
                     store_trading_signal.delay(
@@ -112,12 +112,12 @@ def five_minute_signal():
 
     async def task_logic():
         # Fetch symbols and generate signals
-        symbols = await mt5_controller.get_mt5_symbols(number_of_top_symbols=10)
-        logger.info(f"Processing symbols: {symbols}")
+        symbols = await mt5_controller.get_mt5_symbols()
 
         for symbol in symbols:
             try:
-                current_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                current_ask_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                current_bid_price = await mt5_controller.get_current_price(symbol, price_type="bid")
                 signal = await controller.generate_signals_for_symbol(
                     symbol=symbol,
                     timeframe="5m"
@@ -129,7 +129,7 @@ def five_minute_signal():
                         signal_type=signal.signal_type.value,
                         confidence=signal.confidence,
                         algorithms=signal.algorithms_triggered,
-                        current_price=current_price
+                        current_price=current_ask_price if signal.signal_type == SignalType.BUY else current_bid_price,
                     )
             except Exception as e:
                 logger.error(f"Error processing {symbol}: {str(e)}")
@@ -145,12 +145,12 @@ def fifteen_minute_signal():
 
     async def task_logic():
         # Fetch symbols and generate signals
-        symbols = await mt5_controller.get_mt5_symbols(number_of_top_symbols=10)
-        logger.info(f"Processing symbols: {symbols}")
+        symbols = await mt5_controller.get_mt5_symbols()
 
         for symbol in symbols:
             try:
-                current_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                current_ask_price = await mt5_controller.get_current_price(symbol, price_type="ask")
+                current_bid_price = await mt5_controller.get_current_price(symbol, price_type="bid")
                 signal = await controller.generate_signals_for_symbol(
                     symbol=symbol,
                     timeframe="15m"
@@ -162,7 +162,7 @@ def fifteen_minute_signal():
                         signal_type=signal.signal_type.value,
                         confidence=signal.confidence,
                         algorithms=signal.algorithms_triggered,
-                        current_price=current_price
+                        current_price=current_ask_price if signal.signal_type == SignalType.BUY else current_bid_price,
                     )
             except Exception as e:
                 logger.error(f"Error processing {symbol}: {str(e)}")
