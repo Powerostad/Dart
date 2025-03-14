@@ -99,10 +99,6 @@ class AsyncMT5Controller:
 
     @async_retry(retries=3, delay=1)
     async def get_mt5_symbols(self, number_of_top_symbols:int=100):
-        # cache_key = f"top_{number_of_top_symbols}_symbols"
-        # cached_data = await self.cache.get(cache_key)
-        # if cached_data is not None:
-        #     return cached_data
         async with self.connection():
             try:
                 symbols_wanted = [
@@ -116,22 +112,7 @@ class AsyncMT5Controller:
                 symbols_str = ",".join(symbols_wanted)
 
                 symbols = self.mt5.symbols_get(group=symbols_str)
-                logger.info(f"Founded Symbols:\n {symbols}")
                 symbol_names = [symbol.name for symbol in symbols]
-                # active_symbols = []
-                # for symbol in symbol_names:
-                #     try:
-                #         data = await self.get_historical_data_candles(symbol, timeframe="daily", lookback=10)
-                #         if data is not None and not data.empty:
-                #             avg_volume = data['tick_volume'].mean()
-                #             active_symbols.append((symbol, avg_volume))
-                #     except Exception as e:
-                #         raise e
-                #         logger.error(f"error on getting data: {str(e)}")
-                #         continue
-                #
-                # active_symbols.sort(key=lambda x: x[1], reverse=True)
-                # self.active_symbols = list({symbol for symbol, _ in active_symbols})[:number_of_top_symbols]
                 self.active_symbols = symbol_names
                 return self.active_symbols
             except Exception as e:

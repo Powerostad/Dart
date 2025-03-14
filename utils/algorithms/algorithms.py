@@ -104,6 +104,7 @@ class MHarrisSystematic(TradingAlgorithm):
 
         current_candle = data.index[-1]
         current_pos = data.index.get_loc(current_candle)
+        print(f"current POS: {current_candle}")
 
         if current_pos < 4:
             return SignalType.NEUTRAL

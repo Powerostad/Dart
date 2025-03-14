@@ -43,7 +43,7 @@ class SignalController:
             for algo in self.algorithms:
                 try:
                     signal = algo.generate_signal(data)
-                    logger.info(f"SIGNAL IS: {signal}")
+                    logger.info(f"SIGNAL Is: {signal} For Algorithm: {algo.name}.")
                     if signal != SignalType.NEUTRAL:
                         algorithm_signals.append({
                             'name': algo.name,

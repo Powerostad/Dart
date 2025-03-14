@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import JSONParser
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -121,21 +121,45 @@ class UserDeleteAccount(APIView):
         user.delete()
         return Response(data="User Deleted!", status=status.HTTP_202_ACCEPTED)
 
-class ProfileView(APIView):
+
+class ProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    # parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
-        profile = Profile.objects.get(user=request.user)
+        profile = get_object_or_404(Profile, user=request.user)
         serializer = ProfileSerializer(profile)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
     def put(self, request):
         profile = Profile.objects.get(user=request.user)
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        data = request.data.copy()
+        data.pop("profile_picture", None)
+        serializer = ProfileSerializer(profile, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UploadProfilePictureAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        profile = get_object_or_404(Profile, user=request.user)
+
+        if 'profile_picture' not in request.FILES:
+            return Response({'error': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if profile.profile_picture:
+            profile.profile_picture.delete(save=False)
+
+        profile.profile_picture = request.FILES['profile_picture']
+        profile.save()
+
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data)
 
 class SubscriptionPlansView(APIView):
     permission_classes = [AllowAny]
