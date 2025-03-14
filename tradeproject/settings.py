@@ -16,7 +16,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 import tradeproject
-from utils.algorithms.algorithms import MHarrisSystematic, NadayaraWatsonFullStrategy15Min, AligatorAlgorithm
+from utils.algorithms.algorithms import MHarrisSystematic, NadayaraWatsonFullStrategy15Min, AligatorAlgorithm, \
+    SMCTrading
 
 load_dotenv()
 
@@ -322,7 +323,8 @@ GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 TRADING_ALGORITHMS = [
     MHarrisSystematic,
     AligatorAlgorithm,
-    NadayaraWatsonFullStrategy15Min
+    NadayaraWatsonFullStrategy15Min,
+    SMCTrading
 ]
 TRADING_TIMEFRAMES = ["1m", '5m', '15m', '1h', '4h', 'daily']
 SIGNAL_CONFIDENCE_THRESHOLD = 0.6
