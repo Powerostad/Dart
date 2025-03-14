@@ -16,6 +16,7 @@ RUN apt-get update \
         build-essential \
         gcc \
         pkg-config \
+        libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 #RUN echo "[global]" > /etc/pip.conf && \
